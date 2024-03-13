@@ -1,0 +1,38 @@
+#ifndef NAOLAND_CONSTRAINT_HPP
+#define NAOLAND_CONSTRAINT_HPP
+
+#include "types.hpp"
+
+#include <functional>
+#include <wayland-server-core.h>
+
+#include "wlr-wrap-start.hpp"
+#include <wlr/types/wlr_pointer_constraints_v1.h>
+#include "wlr-wrap-end.hpp"
+
+class PointerConstraint {
+public:
+    struct Listeners {
+        std::reference_wrapper<PointerConstraint> parent;
+        wl_listener destroy = {};
+        explicit Listeners(PointerConstraint& parent) noexcept
+            : parent(parent)
+        {
+        }
+    };
+
+private:
+    Listeners listeners;
+
+public:
+    Seat& seat;
+    wlr_pointer_constraint_v1& wlr;
+
+    PointerConstraint(Seat& seat, wlr_pointer_constraint_v1& wlr) noexcept;
+    ~PointerConstraint() noexcept;
+
+    void activate() const;
+    void deactivate() const;
+};
+
+#endif

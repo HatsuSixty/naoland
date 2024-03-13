@@ -1,0 +1,14 @@
+subprojects/*/
+
+/*build*/
+*.tar.*
+
+*.out
+*.vgcore
+*~
+core*
+
+justfile
+/.*/
+
+!/.github/
