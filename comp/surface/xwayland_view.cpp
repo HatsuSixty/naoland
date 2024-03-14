@@ -169,19 +169,6 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void*)
     }
 }
 
-static void xdg_toplevel_request_decoration_mode_notify(wl_listener* listener, void*)
-{
-    XWaylandView& view = naoland_container_of(listener, view, request_decoration_mode);
-    wlr_xdg_toplevel_decoration_v1_set_mode(view.xdg_toplevel_decoration,
-                                            WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-}
-
-static void xdg_toplevel_destroy_decoration_notify(wl_listener* listener, void*)
-{
-    XWaylandView& view = naoland_container_of(listener, view, destroy_decoration);
-    view.destroy_decorations();
-}
-
 XWaylandView::XWaylandView(Server& server,
                            wlr_xwayland_surface& surface) noexcept
     : listeners(*this)
@@ -266,23 +253,6 @@ constexpr wlr_box XWaylandView::get_max_size() const
         max.height = hints.max_height > 0 ? hints.max_height : UINT16_MAX;
     }
     return max;
-}
-
-void XWaylandView::setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration)
-{
-    xdg_toplevel_decoration = decoration;
-
-    listeners.request_decoration_mode.notify = xdg_toplevel_request_decoration_mode_notify;
-    wl_signal_add(&decoration->events.request_mode, &listeners.request_decoration_mode);
-
-    listeners.destroy_decoration.notify = xdg_toplevel_destroy_decoration_notify;
-    wl_signal_add(&decoration->events.destroy, &listeners.destroy_decoration);
-}
-
-void XWaylandView::destroy_decorations()
-{
-    wl_list_remove(&listeners.destroy_decoration.link);
-    wl_list_remove(&listeners.request_decoration_mode.link);
 }
 
 void XWaylandView::map()

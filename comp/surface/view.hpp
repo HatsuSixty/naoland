@@ -16,20 +16,31 @@
 #include "wlr-wrap-end.hpp"
 
 struct View : Surface {
+    struct Listeners {
+        std::reference_wrapper<View> parent;
+        wl_listener request_decoration_mode = {};
+        wl_listener destroy_decoration = {};
+        explicit Listeners(View& parent) noexcept
+            : parent(parent)
+        {
+        }
+    };
+
     ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
     ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
     bool is_minimized = false;
     wlr_box current = {};
     wlr_box previous = {};
     std::optional<ForeignToplevelHandle> toplevel_handle = {};
+    wlr_xdg_toplevel_decoration_v1* xdg_toplevel_decoration;
 
+    View() noexcept;
     ~View() noexcept override = default;
 
     [[nodiscard]] virtual wlr_box get_geometry() const = 0;
     [[nodiscard]] virtual wlr_box get_min_size() const = 0;
     [[nodiscard]] virtual wlr_box get_max_size() const = 0;
 
-    virtual void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) = 0;
     virtual void map() = 0;
     virtual void unmap() = 0;
     virtual void close() = 0;
@@ -45,8 +56,12 @@ struct View : Surface {
     void set_minimized(bool minimized);
     void toggle_maximize();
     void toggle_fullscreen();
+    void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration);
+    void destroy_decorations();
 
 private:
+    Listeners listeners = Listeners(*this);
+
     [[nodiscard]] std::optional<std::reference_wrapper<Output>>
     find_output_for_maximize() const;
     void stack();
@@ -106,12 +121,9 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
-    void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) override;
     void map() override;
     void unmap() override;
     void close() override;
-
-    void destroy_decorations();
 
 protected:
     void impl_set_position(int32_t x, int32_t y) override;
@@ -164,12 +176,9 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
-    void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) override;
     void map() override;
     void unmap() override;
     void close() override;
-
-    void destroy_decorations();
 
 protected:
     void impl_set_position(int32_t x, int32_t y) override;

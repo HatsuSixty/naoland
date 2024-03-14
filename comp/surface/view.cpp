@@ -18,6 +18,11 @@
 #include <wlr/util/edges.h>
 #include "wlr-wrap-end.hpp"
 
+View::View() noexcept
+    : listeners(*this)
+{
+}
+
 std::optional<std::reference_wrapper<Output>>
 View::find_output_for_maximize() const
 {
@@ -345,4 +350,34 @@ void View::toggle_fullscreen()
     } else {
         set_placement(VIEW_PLACEMENT_FULLSCREEN);
     }
+}
+
+static void xdg_toplevel_request_decoration_mode_notify(wl_listener* listener, void*)
+{
+    View& view = naoland_container_of(listener, view, request_decoration_mode);
+    wlr_xdg_toplevel_decoration_v1_set_mode(view.xdg_toplevel_decoration,
+                                            WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+}
+
+static void xdg_toplevel_destroy_decoration_notify(wl_listener* listener, void*)
+{
+    View& view = naoland_container_of(listener, view, destroy_decoration);
+    view.destroy_decorations();
+}
+
+void View::setup_decorations(wlr_xdg_toplevel_decoration_v1 *decoration)
+{
+    xdg_toplevel_decoration = decoration;
+
+    listeners.request_decoration_mode.notify = xdg_toplevel_request_decoration_mode_notify;
+    wl_signal_add(&decoration->events.request_mode, &listeners.request_decoration_mode);
+
+    listeners.destroy_decoration.notify = xdg_toplevel_destroy_decoration_notify;
+    wl_signal_add(&decoration->events.destroy, &listeners.destroy_decoration);
+
+    xdg_toplevel_request_decoration_mode_notify(&listeners.request_decoration_mode, decoration);
+}
+
+void View::destroy_decorations()
+{
 }
