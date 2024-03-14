@@ -21,6 +21,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include "wlr-wrap-end.hpp"
 
 typedef enum {
@@ -44,6 +45,7 @@ public:
         wl_listener output_layout_change = {};
         wl_listener output_manager_apply = {};
         wl_listener output_power_manager_set_mode = {};
+        wl_listener decoration_manager_new_toplevel_decoration = {};
         explicit Listeners(Server& parent) noexcept
             : parent(parent)
         {
@@ -95,6 +97,8 @@ public:
 
     wlr_drm_lease_v1_manager* drm_manager;
     wlr_content_type_manager_v1* content_type_manager;
+
+    wlr_xdg_decoration_manager_v1* decoration_manager;
 
     Server();
 

@@ -8,7 +8,9 @@
 #include "surface.hpp"
 
 #include "wlr-wrap-start.hpp"
+#include <wayland-server-core.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 /* Called when the surface is mapped, or ready to display on-screen. */
@@ -121,6 +123,19 @@ static void xdg_toplevel_set_parent_notify(wl_listener* listener, void*)
     view.toplevel_handle->set_parent({});
 }
 
+static void xdg_toplevel_request_decoration_mode_notify(wl_listener* listener, void*)
+{
+    XdgView& view = naoland_container_of(listener, view, request_decoration_mode);
+    wlr_xdg_toplevel_decoration_v1_set_mode(view.xdg_toplevel_decoration,
+                                            WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+}
+
+static void xdg_toplevel_destroy_decoration_notify(wl_listener* listener, void*)
+{
+    XdgView& view = naoland_container_of(listener, view, destroy_decoration);
+    view.destroy_decorations();
+}
+
 XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
     : listeners(*this)
     , server(server)
@@ -225,6 +240,25 @@ constexpr wlr_box XdgView::get_max_size() const
         ? xdg_toplevel.current.max_height
         : INT32_MAX;
     return { 0, 0, max_width, max_height };
+}
+
+void XdgView::setup_decorations(wlr_xdg_toplevel_decoration_v1 *decoration)
+{
+    xdg_toplevel_decoration = decoration;
+
+    listeners.request_decoration_mode.notify = xdg_toplevel_request_decoration_mode_notify;
+    wl_signal_add(&decoration->events.request_mode, &listeners.request_decoration_mode);
+
+    listeners.destroy_decoration.notify = xdg_toplevel_destroy_decoration_notify;
+    wl_signal_add(&decoration->events.destroy, &listeners.destroy_decoration);
+
+    xdg_toplevel_request_decoration_mode_notify(&listeners.request_decoration_mode, decoration);
+}
+
+void XdgView::destroy_decorations()
+{
+    wl_list_remove(&listeners.destroy_decoration.link);
+    wl_list_remove(&listeners.request_decoration_mode.link);
 }
 
 void XdgView::map()

@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
+#include <wayland-server-core.h>
 #include <wlr/backend/session.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_data_control_v1.h>
@@ -32,6 +33,8 @@
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/util/box.h>
 #include <wlr/util/log.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
+#include <wlr/types/wlr_server_decoration.h>
 #include "wlr-wrap-end.hpp"
 
 void Server::focus_view(View* view, wlr_surface* surface)
@@ -364,6 +367,14 @@ void output_manager_apply_notify(wl_listener* listener, void* data)
     server.seat->cursor.reload_image();
 }
 
+static void new_toplevel_decoration_notify(wl_listener*, void* data)
+{
+    wlr_xdg_toplevel_decoration_v1* decoration
+        = static_cast<wlr_xdg_toplevel_decoration_v1*>(data);
+    View* view = static_cast<View*>(decoration->toplevel->base->surface->data);
+    view->setup_decorations(decoration);
+}
+
 Server::Server()
     : listeners(*this)
 {
@@ -488,6 +499,15 @@ Server::Server()
 
     idle_notifier = wlr_idle_notifier_v1_create(display);
     idle_inhibit_manager = wlr_idle_inhibit_v1_create(display);
+
+    wlr_server_decoration_manager_set_default_mode(
+        wlr_server_decoration_manager_create(display),
+        WLR_SERVER_DECORATION_MANAGER_MODE_SERVER);
+    decoration_manager = wlr_xdg_decoration_manager_v1_create(display);
+    listeners.decoration_manager_new_toplevel_decoration.notify
+        = new_toplevel_decoration_notify;
+    wl_signal_add(&decoration_manager->events.new_toplevel_decoration,
+                  &listeners.decoration_manager_new_toplevel_decoration);
 
     drm_manager = wlr_drm_lease_v1_manager_create(display, backend);
     if (drm_manager != nullptr) {

@@ -19,6 +19,7 @@ naoland_comp_sources = [
   protocols_server_header['wlr-layer-shell-unstable-v1'],
   protocols_server_header['wlr-output-power-management-unstable-v1'],
   protocols_server_header['pointer-constraints-unstable-v1'],
+  protocols_server_header['xdg-decoration-unstable-v1'],
 ]
 
 exe = executable(

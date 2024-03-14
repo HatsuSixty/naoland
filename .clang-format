@@ -21,3 +21,4 @@ IndentPPDirectives: AfterHash
 RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false
 ColumnLimit: 80
+SortIncludes: false

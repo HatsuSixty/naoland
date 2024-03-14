@@ -12,6 +12,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/box.h>
 #include <wlr/xwayland.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include "wlr-wrap-end.hpp"
 
 struct View : Surface {
@@ -28,6 +29,7 @@ struct View : Surface {
     [[nodiscard]] virtual wlr_box get_min_size() const = 0;
     [[nodiscard]] virtual wlr_box get_max_size() const = 0;
 
+    virtual void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) = 0;
     virtual void map() = 0;
     virtual void unmap() = 0;
     virtual void close() = 0;
@@ -77,6 +79,8 @@ public:
         wl_listener set_title = {};
         wl_listener set_app_id = {};
         wl_listener set_parent = {};
+        wl_listener request_decoration_mode = {};
+        wl_listener destroy_decoration = {};
         explicit Listeners(XdgView& parent) noexcept
             : parent(parent)
         {
@@ -90,6 +94,7 @@ private:
 public:
     Server& server;
     wlr_xdg_toplevel& xdg_toplevel;
+    wlr_xdg_toplevel_decoration_v1* xdg_toplevel_decoration;
 
     XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept;
     ~XdgView() noexcept override;
@@ -101,9 +106,12 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
+    void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) override;
     void map() override;
     void unmap() override;
     void close() override;
+
+    void destroy_decorations();
 
 protected:
     void impl_set_position(int32_t x, int32_t y) override;
@@ -134,6 +142,8 @@ public:
         wl_listener set_title = {};
         wl_listener set_class = {};
         wl_listener set_parent = {};
+        wl_listener request_decoration_mode = {};
+        wl_listener destroy_decoration = {};
         explicit Listeners(XWaylandView& parent) noexcept
             : parent(parent)
         {
@@ -142,6 +152,7 @@ public:
 
     Server& server;
     wlr_xwayland_surface& xwayland_surface;
+    wlr_xdg_toplevel_decoration_v1* xdg_toplevel_decoration;
 
     XWaylandView(Server& server, wlr_xwayland_surface& surface) noexcept;
     ~XWaylandView() noexcept override;
@@ -153,9 +164,12 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
+    void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration) override;
     void map() override;
     void unmap() override;
     void close() override;
+
+    void destroy_decorations();
 
 protected:
     void impl_set_position(int32_t x, int32_t y) override;
