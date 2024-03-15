@@ -18,7 +18,10 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/edges.h>
+#include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
+
+#include <linux/input-event-codes.h>
 
 void Cursor::process_resize(uint32_t const time) const
 {
@@ -181,7 +184,54 @@ static void cursor_button_notify(wl_listener* listener, void* data)
             cursor.reset_mode();
         }
     } else if (naoland_surface != nullptr && naoland_surface->is_view()) {
-        /* Focus that client if the button was _pressed_ */
+        /* Handle window move/resize */
+        wlr_keyboard* keyboard = wlr_seat_get_keyboard(server.seat->wlr);
+        uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard);
+        if (modifiers == WLR_MODIFIER_ALT) {
+            View* view = dynamic_cast<View*>(naoland_surface);
+
+            /* Calculate which edge of the view is
+             * the closest to the cursor
+             */
+            wlr_box geometry = view->get_geometry();
+            double cursor_x = cursor.wlr.x;
+            double cursor_y = cursor.wlr.y;
+
+            int dist_left = cursor_x - geometry.x;
+            int dist_right = geometry.x + geometry.width - cursor_x;
+            int dist_top = cursor_y - geometry.y;
+            int dist_bottom = geometry.y + geometry.height - cursor_y;
+
+            int closest_horz = std::min({dist_left, dist_right});
+            int closest_vert = std::min({dist_top, dist_bottom});
+
+            int edges = 0;
+            {
+                if (closest_horz == dist_left)
+                    edges |= WLR_EDGE_LEFT;
+                else if (closest_horz == dist_right)
+                    edges |= WLR_EDGE_RIGHT;
+
+                if (closest_vert == dist_top)
+                    edges |= WLR_EDGE_TOP;
+                else if (closest_vert == dist_bottom)
+                    edges |= WLR_EDGE_BOTTOM;
+            }
+
+            switch (event->button) {
+            case BTN_LEFT: {
+                // Window move
+                view->begin_interactive(NAOLAND_CURSOR_MOVE, edges);
+            } break;
+            case BTN_RIGHT: {
+                // Window resize
+                view->begin_interactive(NAOLAND_CURSOR_RESIZE, edges);
+            } break;
+            }
+
+            return;
+        }
+        /* If no modifiers were pressed, focus that client */
         server.focus_view(dynamic_cast<View*>(naoland_surface), surface);
     } else {
         server.focus_view(nullptr);
