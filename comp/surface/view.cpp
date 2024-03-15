@@ -380,4 +380,6 @@ void View::setup_decorations(wlr_xdg_toplevel_decoration_v1 *decoration)
 
 void View::destroy_decorations()
 {
+    wl_list_remove(&listeners.destroy_decoration.link);
+    wl_list_remove(&listeners.request_decoration_mode.link);
 }
