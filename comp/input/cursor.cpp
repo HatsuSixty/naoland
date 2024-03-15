@@ -169,9 +169,6 @@ static void cursor_button_notify(wl_listener* listener, void* data)
 
     Server& server = cursor.seat.server;
 
-    /* Notify the client with pointer focus that a button press has occurred */
-    wlr_seat_pointer_notify_button(server.seat->wlr, event->time_msec,
-                                   event->button, event->state);
     double sx, sy;
 
     wlr_surface* surface = nullptr;
@@ -236,6 +233,10 @@ static void cursor_button_notify(wl_listener* listener, void* data)
     } else {
         server.focus_view(nullptr);
     }
+
+    /* Notify the client with pointer focus that a button press has occurred */
+    wlr_seat_pointer_notify_button(server.seat->wlr, event->time_msec,
+                                   event->button, event->state);
 }
 
 /* This event is forwarded by the cursor when a pointer emits a _relative_
