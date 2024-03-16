@@ -15,7 +15,7 @@
 #include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
-static naoland_scene_layer_t
+static NaolandSceneLayer
 naoland_layer_from_wlr_layer(zwlr_layer_shell_v1_layer const layer)
 {
     switch (layer) {
@@ -101,7 +101,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*)
 
     uint32_t const committed = surface.current.committed;
     if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
-        naoland_scene_layer_t const chosen_layer
+        NaolandSceneLayer const chosen_layer
             = naoland_layer_from_wlr_layer(surface.current.layer);
         wlr_scene_node_reparent(layer.scene_node,
                                 server.scene_layers[chosen_layer]);
@@ -137,7 +137,7 @@ Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
     , output(output)
     , layer_surface(surface)
 {
-    naoland_scene_layer_t const chosen_layer
+    NaolandSceneLayer const chosen_layer
         = naoland_layer_from_wlr_layer(surface.current.layer);
     scene_layer_surface = wlr_scene_layer_surface_v1_create(
         output.server.scene_layers[chosen_layer], &surface);

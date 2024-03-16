@@ -24,14 +24,14 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include "wlr-wrap-end.hpp"
 
-typedef enum {
+enum NaolandSceneLayer {
     NAOLAND_SCENE_LAYER_BACKGROUND = 0,
     NAOLAND_SCENE_LAYER_BOTTOM,
     NAOLAND_SCENE_LAYER_NORMAL,
     NAOLAND_SCENE_LAYER_TOP,
     NAOLAND_SCENE_LAYER_OVERLAY,
     NAOLAND_SCENE_LAYER_LOCK
-} naoland_scene_layer_t;
+};
 
 class Server {
 public:
