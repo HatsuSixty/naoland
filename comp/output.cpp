@@ -30,6 +30,52 @@ struct RenderBufferOptions {
     wlr_renderer* renderer;
 };
 
+static void render_window_borders(wlr_render_pass* pass, wlr_box window_box)
+{
+    int const border_width = 2;
+    float const color[] = { 1, 1, 1, 1 };
+    wlr_render_rect_options rect_options = {
+        .color = {
+            .r = color[0],
+            .g = color[1],
+            .b = color[2],
+            .a = color[3],
+        },
+    };
+
+    rect_options.box = {
+        .x = window_box.x - border_width,
+        .y = window_box.y - border_width,
+        .width = window_box.width + border_width * 2,
+        .height = border_width,
+    };
+    wlr_render_pass_add_rect(pass, &rect_options);
+
+    rect_options.box = {
+        .x = window_box.x - border_width,
+        .y = window_box.y + window_box.height,
+        .width = window_box.width + border_width * 2,
+        .height = border_width,
+    };
+    wlr_render_pass_add_rect(pass, &rect_options);
+
+    rect_options.box = {
+        .x = window_box.x - border_width,
+        .y = window_box.y,
+        .width = border_width,
+        .height = window_box.height,
+    };
+    wlr_render_pass_add_rect(pass, &rect_options);
+
+    rect_options.box = {
+        .x = window_box.x + window_box.width,
+        .y = window_box.y,
+        .width = border_width,
+        .height = window_box.height,
+    };
+    wlr_render_pass_add_rect(pass, &rect_options);
+}
+
 static void render_buffer(struct wlr_scene_buffer* buffer, int sx, int sy, void* user_data)
 {
     RenderBufferOptions* data = (RenderBufferOptions*)user_data;
@@ -38,14 +84,18 @@ static void render_buffer(struct wlr_scene_buffer* buffer, int sx, int sy, void*
     if (!surface)
         return;
     wlr_texture* texture = wlr_surface_get_texture(surface);
+    wlr_box window_box = {
+        .x = sx,
+        .y = sy,
+        .width = (int)texture->width,
+        .height = (int)texture->height,
+    };
+
+    render_window_borders(data->pass, window_box);
+
     wlr_render_texture_options options = {
         .texture = texture,
-        .dst_box = {
-            .x = sx,
-            .y = sy,
-            .width = (int)texture->width,
-            .height = (int)texture->height,
-        },
+        .dst_box = window_box,
     };
     wlr_render_pass_add_texture(data->pass, &options);
 }
