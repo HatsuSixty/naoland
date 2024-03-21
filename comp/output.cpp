@@ -7,10 +7,12 @@
 #include <set>
 #include <utility>
 
-#include <wlr-wrap-start.hpp>
+#include "wlr-wrap-start.hpp"
+#include <wayland-util.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
-#include <wlr-wrap-end.hpp>
+#include <wlr/util/log.h>
+#include "wlr-wrap-end.hpp"
 
 /* This function is called every time an output is ready to display a frame,
  * generally at the output's refresh rate (e.g. 60Hz). */
@@ -21,6 +23,31 @@ static void output_request_state_notify(wl_listener* listener, void* data)
 
     wlr_output_commit_state(&output.wlr, event->state);
     output.update_layout();
+}
+
+struct RenderBufferOptions {
+    wlr_render_pass* pass;
+    wlr_renderer* renderer;
+};
+
+static void render_buffer(struct wlr_scene_buffer* buffer, int sx, int sy, void* user_data)
+{
+    RenderBufferOptions* data = (RenderBufferOptions*)user_data;
+
+    wlr_surface* surface = wlr_scene_surface_try_from_buffer(buffer)->surface;
+    if (!surface)
+        return;
+    wlr_texture* texture = wlr_surface_get_texture(surface);
+    wlr_render_texture_options options = {
+        .texture = texture,
+        .dst_box = {
+            .x = sx,
+            .y = sy,
+            .width = (int)texture->width,
+            .height = (int)texture->height,
+        },
+    };
+    wlr_render_pass_add_texture(data->pass, &options);
 }
 
 /* This function is called every time an output is ready to display a frame,
@@ -36,8 +63,28 @@ static void output_frame_notify(wl_listener* listener, void*)
         return;
     }
 
-    /* Render the scene if needed and commit the output */
-    wlr_scene_output_commit(scene_output, nullptr);
+    wlr_output_state state;
+    wlr_output_state_init(&state);
+    wlr_render_pass* pass = wlr_output_begin_render_pass(&output.wlr, &state, nullptr, nullptr);
+
+    if (pass) {
+        // Clear screen
+        wlr_render_rect_options clear_options = {
+            .box = { .width = output.wlr.width, .height = output.wlr.height },
+            .color = { .3, .3, .3, 1 },
+        };
+        wlr_render_pass_add_rect(pass, &clear_options);
+
+        RenderBufferOptions user_data = {
+            .pass = pass,
+            .renderer = output.server.renderer,
+        };
+        wlr_scene_node_for_each_buffer(&scene_output->scene->tree.node, render_buffer, &user_data);
+
+        wlr_render_pass_submit(pass);
+    }
+    wlr_output_commit_state(&output.wlr, &state);
+    wlr_output_state_finish(&state);
 
     timespec now = {};
     timespec_get(&now, TIME_UTC);
