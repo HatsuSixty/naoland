@@ -12,6 +12,7 @@
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/util/log.h>
+#include <wlr/util/box.h>
 #include "wlr-wrap-end.hpp"
 
 /* This function is called every time an output is ready to display a frame,
@@ -23,6 +24,52 @@ static void output_request_state_notify(wl_listener* listener, void* data)
 
     wlr_output_commit_state(&output.wlr, event->state);
     output.update_layout();
+}
+
+static void scene_node_get_size(struct wlr_scene_node *node, int *width, int *height) {
+    *width = 0;
+    *height = 0;
+
+    switch (node->type) {
+    case WLR_SCENE_NODE_TREE:
+        return;
+    case WLR_SCENE_NODE_RECT: {
+        struct wlr_scene_rect *scene_rect = wlr_scene_rect_from_node(node);
+        *width = scene_rect->width;
+        *height = scene_rect->height;
+    } break;
+    case WLR_SCENE_NODE_BUFFER: {
+        struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
+        if (scene_buffer->dst_width > 0 && scene_buffer->dst_height > 0) {
+            *width = scene_buffer->dst_width;
+            *height = scene_buffer->dst_height;
+        } else if (scene_buffer->buffer) {
+            if (scene_buffer->transform & WL_OUTPUT_TRANSFORM_90) {
+                *height = scene_buffer->buffer->width;
+                *width = scene_buffer->buffer->height;
+            } else {
+                *width = scene_buffer->buffer->width;
+                *height = scene_buffer->buffer->height;
+            }
+        }
+    } break;
+    }
+}
+
+static wlr_texture* scene_buffer_get_texture(struct wlr_scene_buffer *scene_buffer, struct wlr_renderer *renderer) {
+    struct wlr_client_buffer* client_buffer =
+        wlr_client_buffer_get(scene_buffer->buffer);
+    if (client_buffer != NULL) {
+        return client_buffer->texture;
+    }
+
+    if (scene_buffer->texture != NULL) {
+        return scene_buffer->texture;
+    }
+
+    scene_buffer->texture =
+        wlr_texture_from_buffer(renderer, scene_buffer->buffer);
+    return scene_buffer->texture;
 }
 
 struct RenderBufferOptions {
@@ -76,28 +123,49 @@ static void render_window_borders(wlr_render_pass* pass, wlr_box window_box)
     wlr_render_pass_add_rect(pass, &rect_options);
 }
 
-static void render_buffer(struct wlr_scene_buffer* buffer, int sx, int sy, void* user_data)
+struct NodeRenderOptions {
+    wlr_render_pass* render_pass;
+    wlr_renderer* renderer;
+    wlr_scene_output* scene_output;
+};
+
+static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
 {
-    RenderBufferOptions* data = (RenderBufferOptions*)user_data;
+    if (!node->enabled) return;
 
-    wlr_surface* surface = wlr_scene_surface_try_from_buffer(buffer)->surface;
-    if (!surface)
-        return;
-    wlr_texture* texture = wlr_surface_get_texture(surface);
-    wlr_box window_box = {
-        .x = sx,
-        .y = sy,
-        .width = (int)texture->width,
-        .height = (int)texture->height,
-    };
+    switch (node->type) {
+    case WLR_SCENE_NODE_RECT:
+        wlr_log(WLR_ERROR, "Rendering rectangles is not implemented yet\n");
+        break;
+    case WLR_SCENE_NODE_TREE: {
+        wlr_scene_tree* tree = wlr_scene_tree_from_node(node);
+        wlr_scene_node* n = {};
+        wl_list_for_each(n, &tree->children, link) {
+            scene_node_render(n, options);
+        }
+    } break;
+    case WLR_SCENE_NODE_BUFFER: {
+        wlr_box dst_box = {};
+        wlr_scene_node_coords(node, &dst_box.x, &dst_box.y);
+        dst_box.x -= options->scene_output->x;
+        dst_box.y -= options->scene_output->y;
+        scene_node_get_size(node, &dst_box.width, &dst_box.height);
 
-    render_window_borders(data->pass, window_box);
+        wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
+        wlr_texture* texture = scene_buffer_get_texture(scene_buffer, options->renderer);
 
-    wlr_render_texture_options options = {
-        .texture = texture,
-        .dst_box = window_box,
-    };
-    wlr_render_pass_add_texture(data->pass, &options);
+        wlr_render_texture_options render_options = {
+            .texture = texture,
+            .src_box = scene_buffer->src_box,
+            .dst_box = dst_box,
+            .alpha = &scene_buffer->opacity,
+            .filter_mode = scene_buffer->filter_mode,
+        };
+        wlr_render_pass_add_texture(options->render_pass, &render_options);
+
+        render_window_borders(options->render_pass, dst_box);
+    } break;
+    }
 }
 
 /* This function is called every time an output is ready to display a frame,
@@ -125,11 +193,12 @@ static void output_frame_notify(wl_listener* listener, void*)
         };
         wlr_render_pass_add_rect(pass, &clear_options);
 
-        RenderBufferOptions user_data = {
-            .pass = pass,
+        NodeRenderOptions node_render_options = {
+            .render_pass = pass,
             .renderer = output.server.renderer,
+            .scene_output = scene_output,
         };
-        wlr_scene_node_for_each_buffer(&scene_output->scene->tree.node, render_buffer, &user_data);
+        scene_node_render(&scene_output->scene->tree.node, &node_render_options);
 
         wlr_render_pass_submit(pass);
     }
