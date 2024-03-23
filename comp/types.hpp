@@ -4,6 +4,7 @@
 class Server;
 class XWayland;
 class Output;
+struct Config;
 
 class Seat;
 class Keyboard;

@@ -4,6 +4,7 @@ naoland_comp_sources = [
   'output.cpp',
   'server.cpp',
   'xwayland.cpp',
+  'config.cpp',
   'input/constraint.cpp',
   'input/cursor.cpp',
   'input/keyboard.cpp',

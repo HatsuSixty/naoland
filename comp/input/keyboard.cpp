@@ -1,5 +1,6 @@
 #include "keyboard.hpp"
 
+#include "config.hpp"
 #include "seat.hpp"
 #include "server.hpp"
 #include "surface/view.hpp"
@@ -12,6 +13,7 @@
 #include <wlr/backend/session.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
 #include <wlr/types/wlr_seat.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
 
 /* This event is raised by the keyboard base wlr_input_device to signal
@@ -25,6 +27,49 @@ static void keyboard_handle_destroy(wl_listener* listener, void*)
     (void)std::ranges::remove(keyboards, &keyboard).begin();
 
     delete &keyboard;
+}
+
+static bool handle_keybinding_for_symbol(Keybinding& keybinding,
+                                         xkb_keysym_t const sym,
+                                         Keyboard const& keyboard)
+{
+    auto const modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
+    if (modifiers == (WLR_MODIFIER_CTRL | WLR_MODIFIER_ALT)
+        && (sym >= XKB_KEY_XF86Switch_VT_1
+            && sym <= XKB_KEY_XF86Switch_VT_12)) {
+        if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
+            unsigned const vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
+            wlr_session_change_vt(keyboard.seat.server.session, vt);
+        }
+        return true;
+    }
+
+    if (modifiers == keybinding.modifiers && sym == keybinding.keysym)
+        switch (keybinding.action.kind) {
+        case NAOLAND_ACTION_COMMAND: {
+            Server& server = keyboard.seat.server;
+
+            switch (keybinding.action.compositor_command) {
+            case NAOLAND_COMMAND_SWITCH_TASK: {
+                /* Cycle to the next view */
+                if (server.views.size() < 2) {
+                    break;
+                }
+                View* next_view = *server.views.begin()++;
+                server.focus_view(next_view);
+            } break;
+            case NAOLAND_COMMAND_QUIT_SERVER:
+                wl_display_terminate(keyboard.seat.server.display);
+                break;
+            }
+
+        } return true;
+        case NAOLAND_ACTION_SPAWN:
+            wlr_log(WLR_ERROR, "TODO: Spawn processes\n");
+            return true;
+        }
+
+    return false;
 }
 
 static bool handle_compositor_keybinding(Keyboard const& keyboard,
@@ -83,14 +128,14 @@ static void keyboard_handle_key(wl_listener* listener, void* data)
         = xkb_state_key_get_syms(keyboard.wlr.xkb_state, keycode, &syms);
 
     bool handled = false;
-    uint32_t const modifiers = wlr_keyboard_get_modifiers(&keyboard.wlr);
     if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-        if (modifiers & WLR_MODIFIER_ALT) {
-            /* If alt is held down and this button was _pressed_, we attempt to
-             * process it as a compositor keybinding. */
-            for (int32_t i = 0; i < nsyms; i++) {
-                handled = handle_compositor_keybinding(keyboard, modifiers,
-                                                       syms[i]);
+        // Handle keybindings
+        for (int i = 0; i < nsyms; ++i) {
+            for (auto& item : keyboard.seat.server.config.keybindings) {
+                bool keybinding_handled =
+                    handle_keybinding_for_symbol(item, syms[i], keyboard);
+                if (!handled)
+                    handled = keybinding_handled;
             }
         }
     }

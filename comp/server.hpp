@@ -1,6 +1,7 @@
 #ifndef NAOLAND_SERVER_HPP
 #define NAOLAND_SERVER_HPP
 
+#include "config.hpp"
 #include "types.hpp"
 
 #include <functional>
@@ -99,6 +100,7 @@ public:
     wlr_content_type_manager_v1* content_type_manager;
 
     wlr_xdg_decoration_manager_v1* decoration_manager;
+    Config config;
 
     Server();
 
