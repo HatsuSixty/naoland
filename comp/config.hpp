@@ -9,6 +9,7 @@
 enum CompositorCommand {
     NAOLAND_COMMAND_QUIT_SERVER,
     NAOLAND_COMMAND_SWITCH_TASK,
+    NAOLAND_COMMAND_CLOSE,
 };
 
 enum KeyActionKind {

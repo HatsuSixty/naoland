@@ -4,15 +4,13 @@
 #include <wlr/types/wlr_keyboard.h>
 #include "wlr-wrap-end.hpp"
 
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 Config::Config()
 {
-    /* List of keysyms can be found at:
-     * https://www.x.org/releases/current/doc/xproto/x11protocol.html#Latin_1_KEYSYMs
-     */
-
     keybindings.push_back(Keybinding {
             .modifiers = WLR_MODIFIER_ALT,
-            .keysym = 0xFF09, // TAB
+            .keysym = XKB_KEY_Tab,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
                 .compositor_command = NAOLAND_COMMAND_SWITCH_TASK,
@@ -20,10 +18,18 @@ Config::Config()
         });
     keybindings.push_back(Keybinding {
             .modifiers = WLR_MODIFIER_ALT,
-            .keysym = 0xFF1B, // ESC
+            .keysym = XKB_KEY_Escape,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
                 .compositor_command = NAOLAND_COMMAND_QUIT_SERVER,
+            },
+        });
+    keybindings.push_back(Keybinding {
+            .modifiers = WLR_MODIFIER_LOGO | WLR_MODIFIER_SHIFT,
+            .keysym = XKB_KEY_Q,
+            .action = KeyAction {
+                .kind = NAOLAND_ACTION_COMMAND,
+                .compositor_command = NAOLAND_COMMAND_CLOSE,
             },
         });
 }

@@ -9,6 +9,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "wlr-wrap-start.hpp"
+#include <wayland-util.h>
 #include <wlr/backend/multi.h>
 #include <wlr/backend/session.h>
 #include <wlr/types/wlr_idle_notify_v1.h>
@@ -59,7 +60,11 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
                 server.focus_view(next_view);
             } break;
             case NAOLAND_COMMAND_QUIT_SERVER:
-                wl_display_terminate(keyboard.seat.server.display);
+                wl_display_terminate(server.display);
+                break;
+            case NAOLAND_COMMAND_CLOSE:
+                if (server.focused_view)
+                    server.focused_view->close();
                 break;
             }
 
