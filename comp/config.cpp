@@ -25,7 +25,7 @@ Config::Config()
             },
         });
     keybindings.push_back(Keybinding {
-            .modifiers = WLR_MODIFIER_LOGO | WLR_MODIFIER_SHIFT,
+            .modifiers = WLR_MODIFIER_ALT | WLR_MODIFIER_SHIFT,
             .keysym = XKB_KEY_Q,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
