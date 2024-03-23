@@ -26,7 +26,8 @@ static void output_request_state_notify(wl_listener* listener, void* data)
     output.update_layout();
 }
 
-static void scene_node_get_size(struct wlr_scene_node *node, int *width, int *height) {
+static void scene_node_get_size(wlr_scene_node* node, int* width, int* height)
+{
     *width = 0;
     *height = 0;
 
@@ -34,12 +35,12 @@ static void scene_node_get_size(struct wlr_scene_node *node, int *width, int *he
     case WLR_SCENE_NODE_TREE:
         return;
     case WLR_SCENE_NODE_RECT: {
-        struct wlr_scene_rect *scene_rect = wlr_scene_rect_from_node(node);
+        wlr_scene_rect* scene_rect = wlr_scene_rect_from_node(node);
         *width = scene_rect->width;
         *height = scene_rect->height;
     } break;
     case WLR_SCENE_NODE_BUFFER: {
-        struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
+        wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
         if (scene_buffer->dst_width > 0 && scene_buffer->dst_height > 0) {
             *width = scene_buffer->dst_width;
             *height = scene_buffer->dst_height;
@@ -56,9 +57,11 @@ static void scene_node_get_size(struct wlr_scene_node *node, int *width, int *he
     }
 }
 
-static wlr_texture* scene_buffer_get_texture(struct wlr_scene_buffer *scene_buffer, struct wlr_renderer *renderer) {
-    struct wlr_client_buffer* client_buffer =
-        wlr_client_buffer_get(scene_buffer->buffer);
+static wlr_texture* scene_buffer_get_texture(wlr_scene_buffer* scene_buffer,
+                                             wlr_renderer* renderer)
+{
+    wlr_client_buffer* client_buffer
+        = wlr_client_buffer_get(scene_buffer->buffer);
     if (client_buffer != NULL) {
         return client_buffer->texture;
     }
@@ -67,15 +70,10 @@ static wlr_texture* scene_buffer_get_texture(struct wlr_scene_buffer *scene_buff
         return scene_buffer->texture;
     }
 
-    scene_buffer->texture =
-        wlr_texture_from_buffer(renderer, scene_buffer->buffer);
+    scene_buffer->texture
+        = wlr_texture_from_buffer(renderer, scene_buffer->buffer);
     return scene_buffer->texture;
 }
-
-struct RenderBufferOptions {
-    wlr_render_pass* pass;
-    wlr_renderer* renderer;
-};
 
 static void render_window_borders(wlr_render_pass* pass, wlr_box window_box)
 {
@@ -131,7 +129,8 @@ struct NodeRenderOptions {
 
 static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
 {
-    if (!node->enabled) return;
+    if (!node->enabled)
+        return;
 
     switch (node->type) {
     case WLR_SCENE_NODE_RECT:
@@ -140,7 +139,8 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
     case WLR_SCENE_NODE_TREE: {
         wlr_scene_tree* tree = wlr_scene_tree_from_node(node);
         wlr_scene_node* n = {};
-        wl_list_for_each(n, &tree->children, link) {
+        wl_list_for_each(n, &tree->children, link)
+        {
             scene_node_render(n, options);
         }
     } break;
@@ -152,7 +152,8 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
         scene_node_get_size(node, &dst_box.width, &dst_box.height);
 
         wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
-        wlr_texture* texture = scene_buffer_get_texture(scene_buffer, options->renderer);
+        wlr_texture* texture
+            = scene_buffer_get_texture(scene_buffer, options->renderer);
 
         wlr_render_texture_options render_options = {
             .texture = texture,
@@ -183,7 +184,8 @@ static void output_frame_notify(wl_listener* listener, void*)
 
     wlr_output_state state;
     wlr_output_state_init(&state);
-    wlr_render_pass* pass = wlr_output_begin_render_pass(&output.wlr, &state, nullptr, nullptr);
+    wlr_render_pass* pass
+        = wlr_output_begin_render_pass(&output.wlr, &state, nullptr, nullptr);
 
     if (pass) {
         // Clear screen
@@ -198,7 +200,8 @@ static void output_frame_notify(wl_listener* listener, void*)
             .renderer = output.server.renderer,
             .scene_output = scene_output,
         };
-        scene_node_render(&scene_output->scene->tree.node, &node_render_options);
+        scene_node_render(&scene_output->scene->tree.node,
+                          &node_render_options);
 
         wlr_render_pass_submit(pass);
     }
