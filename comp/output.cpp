@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "wlr-wrap-start.hpp"
+#include <wayland-server-protocol.h>
 #include <wayland-util.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -125,6 +126,7 @@ struct NodeRenderOptions {
     wlr_render_pass* render_pass;
     wlr_renderer* renderer;
     wlr_scene_output* scene_output;
+    wl_output_transform transform;
 };
 
 static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
@@ -155,11 +157,15 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
         wlr_texture* texture
             = scene_buffer_get_texture(scene_buffer, options->renderer);
 
+        wl_output_transform transform = wlr_output_transform_invert(scene_buffer->transform);
+        transform = wlr_output_transform_compose(transform, options->transform);
+
         wlr_render_texture_options render_options = {
             .texture = texture,
             .src_box = scene_buffer->src_box,
             .dst_box = dst_box,
             .alpha = &scene_buffer->opacity,
+            .transform = transform,
             .filter_mode = scene_buffer->filter_mode,
         };
         wlr_render_pass_add_texture(options->render_pass, &render_options);
@@ -199,6 +205,7 @@ static void output_frame_notify(wl_listener* listener, void*)
             .render_pass = pass,
             .renderer = output.server.renderer,
             .scene_output = scene_output,
+            .transform = output.wlr.transform,
         };
         scene_node_render(&scene_output->scene->tree.node,
                           &node_render_options);
