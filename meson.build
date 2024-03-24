@@ -3,6 +3,11 @@ project('naoland', ['cpp'], default_options : [
   'warning_level=3'
 ])
 
+cpp_compiler = meson.get_compiler('cpp')
+if cpp_compiler.has_argument('-Wno-gnu-zero-variadic-macro-arguments')
+  add_project_arguments('-Wno-gnu-zero-variadic-macro-arguments', language : 'cpp')
+endif
+
 wlroots_dep = dependency('wlroots',
                          version: ['>= 0.17', '< 0.18.0'],
                          fallback: ['wlroots'],
