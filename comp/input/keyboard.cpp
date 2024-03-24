@@ -77,43 +77,6 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
     return false;
 }
 
-static bool handle_compositor_keybinding(Keyboard const& keyboard,
-                                         uint32_t const modifiers,
-                                         xkb_keysym_t const sym)
-{
-    Server& server = keyboard.seat.server;
-
-    if (modifiers == WLR_MODIFIER_ALT) {
-        switch (sym) {
-        case XKB_KEY_Escape: {
-            wl_display_terminate(server.display);
-            return true;
-        }
-        case XKB_KEY_Tab: {
-            /* Cycle to the next view */
-            if (server.views.size() < 2) {
-                return true;
-            }
-            View* next_view = *server.views.begin()++;
-            server.focus_view(next_view);
-            return true;
-        }
-        default: {
-            break;
-        }
-        }
-    } else if (sym >= XKB_KEY_XF86Switch_VT_1
-               && sym <= XKB_KEY_XF86Switch_VT_12) {
-        if (wlr_backend_is_multi(keyboard.seat.server.backend)) {
-            unsigned const vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
-            wlr_session_change_vt(keyboard.seat.server.session, vt);
-        }
-        return true;
-    }
-
-    return false;
-}
-
 /* This event is raised when a key is pressed or released. */
 static void keyboard_handle_key(wl_listener* listener, void* data)
 {
