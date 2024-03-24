@@ -15,6 +15,12 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include "wlr-wrap-end.hpp"
 
+/* View - A Window
+ *
+ * NOTE: Every view that wants to have window borders must set the `data`
+ *       field of its `wlr_surface` to the pointer to the view
+ */
+
 struct View : Surface {
     struct Listeners {
         std::reference_wrapper<View> parent;
@@ -29,6 +35,7 @@ struct View : Surface {
     ViewPlacement prev_placement = VIEW_PLACEMENT_STACKING;
     ViewPlacement curr_placement = VIEW_PLACEMENT_STACKING;
     bool is_minimized = false;
+    bool is_active = false;
     wlr_box current = {};
     wlr_box previous = {};
     std::optional<ForeignToplevelHandle> toplevel_handle = {};

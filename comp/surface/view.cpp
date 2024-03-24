@@ -203,6 +203,8 @@ void View::set_activated(bool const activated)
     if (toplevel_handle.has_value()) {
         toplevel_handle->set_activated(activated);
     }
+
+    is_active = activated;
 }
 
 void View::set_placement(ViewPlacement const new_placement, bool const force)

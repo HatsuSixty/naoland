@@ -32,7 +32,17 @@ struct Keybinding {
 struct Config {
     std::list<Keybinding> keybindings;
 
+    struct {
+        struct {
+            uint32_t focused;
+            uint32_t unfocused;
+        } color;
+        int width;
+    } border;
+
     Config();
 };
+
+void int_to_float_array(uint32_t color, float dst[4]);
 
 #endif

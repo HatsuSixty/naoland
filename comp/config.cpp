@@ -8,6 +8,11 @@
 
 Config::Config()
 {
+    /*
+     * Default configuration
+     */
+
+    // Keybindings
     keybindings.push_back(Keybinding {
             .modifiers = WLR_MODIFIER_ALT,
             .keysym = XKB_KEY_Tab,
@@ -32,4 +37,17 @@ Config::Config()
                 .compositor_command = NAOLAND_COMMAND_CLOSE,
             },
         });
+
+    // Border
+    border.width = 3;
+    border.color.focused = 0xFFFF00FF;
+    border.color.unfocused = 0xFFFFFFFF;
+}
+
+void int_to_float_array(uint32_t color, float dst[4])
+{
+    dst[3] = (float)((uint8_t)(color) & 0xFF)/255;
+    dst[2] = (float)((uint8_t)(color >> 8) & 0xFF)/255;
+    dst[1] = (float)((uint8_t)(color >> 16) & 0xFF)/255;
+    dst[0] = (float)((uint8_t)(color >> 24) & 0xFF)/255;
 }

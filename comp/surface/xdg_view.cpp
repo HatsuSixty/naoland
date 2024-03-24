@@ -182,6 +182,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
     wl_signal_add(&xdg_toplevel.events.set_parent, &listeners.set_parent);
 
     server.views.push_back(this);
+
+    xdg_toplevel.base->surface->data = this;
 }
 
 XdgView::~XdgView() noexcept

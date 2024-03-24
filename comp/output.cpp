@@ -1,7 +1,9 @@
 #include "output.hpp"
 
+#include "config.hpp"
 #include "server.hpp"
 #include "surface/layer.hpp"
+#include "surface/view.hpp"
 #include "types.hpp"
 
 #include <set>
@@ -76,10 +78,9 @@ static wlr_texture* scene_buffer_get_texture(wlr_scene_buffer* scene_buffer,
     return scene_buffer->texture;
 }
 
-static void render_window_borders(wlr_render_pass* pass, wlr_box window_box)
+static void render_window_borders(wlr_render_pass* pass, wlr_box window_box, float const color[4])
 {
     int const border_width = 2;
-    float const color[] = { 1, 1, 1, 1 };
     wlr_render_rect_options rect_options = {
         .color = {
             .r = color[0],
@@ -123,8 +124,8 @@ static void render_window_borders(wlr_render_pass* pass, wlr_box window_box)
 }
 
 struct NodeRenderOptions {
+    Server& server;
     wlr_render_pass* render_pass;
-    wlr_renderer* renderer;
     wlr_scene_output* scene_output;
     wl_output_transform transform;
 };
@@ -155,7 +156,7 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
 
         wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
         wlr_texture* texture
-            = scene_buffer_get_texture(scene_buffer, options->renderer);
+            = scene_buffer_get_texture(scene_buffer, options->server.renderer);
 
         wl_output_transform transform = wlr_output_transform_invert(scene_buffer->transform);
         transform = wlr_output_transform_compose(transform, options->transform);
@@ -170,7 +171,24 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
         };
         wlr_render_pass_add_texture(options->render_pass, &render_options);
 
-        render_window_borders(options->render_pass, dst_box);
+        View* view = nullptr;
+        {
+            wlr_surface* wlr_surface = wlr_scene_surface_try_from_buffer(scene_buffer)->surface;
+            Surface* surface = nullptr;
+            if (wlr_surface)
+                surface = static_cast<Surface*>(wlr_surface->data);
+            if (surface)
+                if (surface->is_view())
+                    view = dynamic_cast<View*>(surface);
+        }
+
+        if (view) {
+            float color[4];
+            int_to_float_array(view->is_active
+                               ? options->server.config.border.color.focused
+                               : options->server.config.border.color.unfocused, color);
+            render_window_borders(options->render_pass, dst_box, color);
+        }
     } break;
     }
 }
@@ -202,8 +220,8 @@ static void output_frame_notify(wl_listener* listener, void*)
         wlr_render_pass_add_rect(pass, &clear_options);
 
         NodeRenderOptions node_render_options = {
+            .server = output.server,
             .render_pass = pass,
-            .renderer = output.server.renderer,
             .scene_output = scene_output,
             .transform = output.wlr.transform,
         };
