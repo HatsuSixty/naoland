@@ -78,9 +78,8 @@ static wlr_texture* scene_buffer_get_texture(wlr_scene_buffer* scene_buffer,
     return scene_buffer->texture;
 }
 
-static void render_window_borders(wlr_render_pass* pass, wlr_box window_box, float const color[4])
+static void render_window_borders(wlr_render_pass* pass, wlr_box window_box, float const color[4], int width)
 {
-    int const border_width = 2;
     wlr_render_rect_options rect_options = {
         .color = {
             .r = color[0],
@@ -91,25 +90,25 @@ static void render_window_borders(wlr_render_pass* pass, wlr_box window_box, flo
     };
 
     rect_options.box = {
-        .x = window_box.x - border_width,
-        .y = window_box.y - border_width,
-        .width = window_box.width + border_width * 2,
-        .height = border_width,
+        .x = window_box.x - width,
+        .y = window_box.y - width,
+        .width = window_box.width + width * 2,
+        .height = width,
     };
     wlr_render_pass_add_rect(pass, &rect_options);
 
     rect_options.box = {
-        .x = window_box.x - border_width,
+        .x = window_box.x - width,
         .y = window_box.y + window_box.height,
-        .width = window_box.width + border_width * 2,
-        .height = border_width,
+        .width = window_box.width + width * 2,
+        .height = width,
     };
     wlr_render_pass_add_rect(pass, &rect_options);
 
     rect_options.box = {
-        .x = window_box.x - border_width,
+        .x = window_box.x - width,
         .y = window_box.y,
-        .width = border_width,
+        .width = width,
         .height = window_box.height,
     };
     wlr_render_pass_add_rect(pass, &rect_options);
@@ -117,7 +116,7 @@ static void render_window_borders(wlr_render_pass* pass, wlr_box window_box, flo
     rect_options.box = {
         .x = window_box.x + window_box.width,
         .y = window_box.y,
-        .width = border_width,
+        .width = width,
         .height = window_box.height,
     };
     wlr_render_pass_add_rect(pass, &rect_options);
@@ -187,7 +186,8 @@ static void scene_node_render(wlr_scene_node* node, NodeRenderOptions* options)
             int_to_float_array(view->is_active
                                ? options->server.config.border.color.focused
                                : options->server.config.border.color.unfocused, color);
-            render_window_borders(options->render_pass, dst_box, color);
+            render_window_borders(options->render_pass, dst_box, color,
+                                  options->server.config.border.width);
         }
     } break;
     }
