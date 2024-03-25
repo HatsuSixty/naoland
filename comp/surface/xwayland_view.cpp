@@ -258,6 +258,10 @@ constexpr wlr_box XWaylandView::get_max_size() const
 void XWaylandView::map()
 {
     xwayland_surface.data = this;
+    /* When rendering the scene tree, this `data` field
+     * is expected to be pointing to a valid View in order
+     * to draw window borders.
+     */
     xwayland_surface.surface->data = this;
 
     toplevel_handle.emplace(*this);

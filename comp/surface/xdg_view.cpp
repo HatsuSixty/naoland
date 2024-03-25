@@ -139,6 +139,10 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
             | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
     scene_node->data = this;
+    /* When rendering the scene tree, this `data` field
+     * is expected to be pointing to a valid View in order
+     * to draw window borders.
+     */
     wlr.base->surface->data = this;
 
     toplevel_handle.emplace(*this);
@@ -182,8 +186,6 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
     wl_signal_add(&xdg_toplevel.events.set_parent, &listeners.set_parent);
 
     server.views.push_back(this);
-
-    xdg_toplevel.base->surface->data = this;
 }
 
 XdgView::~XdgView() noexcept
