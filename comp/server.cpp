@@ -466,7 +466,7 @@ Server::Server()
     assert(presentation);
     wlr_scene_set_presentation(scene, presentation);
 
-    xdg_shell = wlr_xdg_shell_create(display, 5);
+    xdg_shell = wlr_xdg_shell_create(display, 6);
     listeners.xdg_shell_new_xdg_surface.notify = new_xdg_surface_notify;
     wl_signal_add(&xdg_shell->events.new_surface,
                   &listeners.xdg_shell_new_xdg_surface);
