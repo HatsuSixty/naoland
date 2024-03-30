@@ -71,7 +71,7 @@ static void wlr_layer_surface_v1_map_notify(wl_listener* listener, void*)
 {
     Layer& layer = naoland_container_of(listener, layer, map);
 
-    wlr_scene_node_set_enabled(layer.scene_node, true);
+    wlr_scene_node_set_enabled(&layer.scene_tree->node, true);
     wlr_surface_send_enter(layer.get_wlr_surface(), &layer.output.wlr);
 }
 
@@ -80,7 +80,7 @@ static void wlr_layer_surface_v1_unmap_notify(wl_listener* listener, void*)
 {
     Layer& layer = naoland_container_of(listener, layer, unmap);
 
-    wlr_scene_node_set_enabled(layer.scene_node, false);
+    wlr_scene_node_set_enabled(&layer.scene_tree->node, false);
 }
 
 /* Called when the surface is destroyed and should never be shown again. */
@@ -103,7 +103,7 @@ static void wlr_layer_surface_v1_commit_notify(wl_listener* listener, void*)
     if (committed & WLR_LAYER_SURFACE_V1_STATE_LAYER) {
         NaolandSceneLayer const chosen_layer
             = naoland_layer_from_wlr_layer(surface.current.layer);
-        wlr_scene_node_reparent(layer.scene_node,
+        wlr_scene_node_reparent(&layer.scene_tree->node,
                                 server.scene_layers[chosen_layer]);
     }
 
@@ -141,9 +141,9 @@ Layer::Layer(Output& output, wlr_layer_surface_v1& surface) noexcept
         = naoland_layer_from_wlr_layer(surface.current.layer);
     scene_layer_surface = wlr_scene_layer_surface_v1_create(
         output.server.scene_layers[chosen_layer], &surface);
-    scene_node = &scene_layer_surface->tree->node;
+    scene_tree = scene_layer_surface->tree;
 
-    scene_node->data = this;
+    scene_tree->node.data = this;
     surface.surface->data = this;
 
     listeners.map.notify = wlr_layer_surface_v1_map_notify;

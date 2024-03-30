@@ -67,7 +67,7 @@ void Server::focus_view(View* view, wlr_surface* surface)
     }
 
     /* Move the view to the front */
-    wlr_scene_node_raise_to_top(view->scene_node);
+    wlr_scene_node_raise_to_top(&view->scene_tree->node);
     std::ranges::remove(views, view);
     for (auto* it : std::as_const(views)) {
         it->set_activated(false);

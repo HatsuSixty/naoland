@@ -152,9 +152,9 @@ static void xwayland_surface_set_parent_notify(wl_listener* listener, void*)
     if (view.xwayland_surface.parent != nullptr) {
         auto* m_view = dynamic_cast<View*>(
             static_cast<Surface*>(view.xwayland_surface.parent->data));
-        if (m_view != nullptr && view.scene_node != nullptr) {
-            wlr_scene_node_reparent(view.scene_node,
-                                    m_view->scene_node->parent);
+        if (m_view != nullptr && view.scene_tree != nullptr) {
+            wlr_scene_node_reparent(&view.scene_tree->node,
+                                    m_view->scene_tree);
             if (view.toplevel_handle.has_value()
                 && m_view->toplevel_handle.has_value()) {
                 view.toplevel_handle->set_parent(
@@ -268,22 +268,21 @@ void XWaylandView::map()
     toplevel_handle->set_title(xwayland_surface.title);
     toplevel_handle->set_app_id(xwayland_surface._class);
 
-    wlr_scene_tree* scene_tree = wlr_scene_subsurface_tree_create(
+    scene_tree = wlr_scene_subsurface_tree_create(
         &server.scene->tree, xwayland_surface.surface);
-    scene_node = &scene_tree->node;
-    scene_node->data = this;
+    scene_tree->node.data = this;
 
     if (xwayland_surface.parent != nullptr) {
         auto const* m_view = dynamic_cast<View*>(
             static_cast<Surface*>(xwayland_surface.parent->data));
         if (m_view != nullptr) {
-            wlr_scene_node_reparent(scene_node, m_view->scene_node->parent);
+            wlr_scene_node_reparent(&scene_tree->node, m_view->scene_tree);
             toplevel_handle->set_parent(m_view->toplevel_handle);
         }
     }
 
-    wlr_scene_node_set_enabled(scene_node, true);
-    wlr_scene_node_set_position(scene_node, current.x, current.y);
+    wlr_scene_node_set_enabled(&scene_tree->node, true);
+    wlr_scene_node_set_position(&scene_tree->node, current.x, current.y);
 
     if (xwayland_surface.fullscreen) {
         set_placement(VIEW_PLACEMENT_FULLSCREEN);
@@ -299,9 +298,9 @@ void XWaylandView::map()
 
 void XWaylandView::unmap()
 {
-    wlr_scene_node_set_enabled(scene_node, false);
-    wlr_scene_node_destroy(scene_node);
-    scene_node = nullptr;
+    wlr_scene_node_set_enabled(&scene_tree->node, false);
+    wlr_scene_node_destroy(&scene_tree->node);
+    scene_tree = nullptr;
     Cursor& cursor = server.seat->cursor;
 
     /* Reset the cursor mode if the grabbed view was unmapped. */

@@ -133,8 +133,8 @@ void View::set_geometry(int32_t const x, int32_t const y, int32_t const width,
         previous = current;
     }
     current = { x, std::max(y, 0), bounded_width, bounded_height };
-    if (scene_node != nullptr) {
-        wlr_scene_node_set_position(scene_node, current.x, current.y);
+    if (scene_tree != nullptr) {
+        wlr_scene_node_set_position(&scene_tree->node, current.x, current.y);
     }
     impl_set_geometry(current.x, current.y, current.width, current.height);
 }
@@ -147,8 +147,8 @@ void View::set_position(int32_t const x, int32_t const y)
     }
     current.x = x;
     current.y = std::max(y, 0);
-    if (scene_node != nullptr) {
-        wlr_scene_node_set_position(scene_node, current.x, current.y);
+    if (scene_tree != nullptr) {
+        wlr_scene_node_set_position(&scene_tree->node, current.x, current.y);
     }
     impl_set_position(current.x, current.y);
 }
@@ -329,10 +329,10 @@ void View::set_minimized(bool const minimized)
     this->is_minimized = minimized;
 
     if (minimized) {
-        wlr_scene_node_set_enabled(scene_node, false);
+        wlr_scene_node_set_enabled(&scene_tree->node, false);
         set_activated(false);
     } else {
-        wlr_scene_node_set_enabled(scene_node, true);
+        wlr_scene_node_set_enabled(&scene_tree->node, true);
     }
 }
 

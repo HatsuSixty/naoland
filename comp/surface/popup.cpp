@@ -46,11 +46,10 @@ Popup::Popup(Surface const& parent, wlr_xdg_popup& wlr) noexcept
     , wlr(wlr)
 {
     this->wlr = wlr;
-    auto* scene_tree
-        = wlr_scene_xdg_surface_create(parent.scene_node->parent, wlr.base);
-    scene_node = &scene_tree->node;
+    scene_tree
+        = wlr_scene_xdg_surface_create(parent.scene_tree, wlr.base);
 
-    scene_node->data = this;
+    scene_tree->node.data = this;
     wlr.base->surface->data = this;
 
     listeners.map.notify = popup_map_notify;

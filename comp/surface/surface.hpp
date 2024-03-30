@@ -14,7 +14,7 @@ enum SurfaceType {
 };
 
 struct Surface {
-    wlr_scene_node* scene_node = nullptr;
+    wlr_scene_tree* scene_tree = nullptr;
 
     virtual ~Surface() noexcept = default;
 

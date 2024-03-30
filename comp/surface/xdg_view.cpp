@@ -128,9 +128,8 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
     , server(server)
     , xdg_toplevel(wlr)
 {
-    auto* scene_tree
+    scene_tree
         = wlr_scene_xdg_surface_create(&server.scene->tree, wlr.base);
-    scene_node = &scene_tree->node;
 
     wlr_xdg_toplevel_set_wm_capabilities(
         &wlr,
@@ -138,7 +137,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
             | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE
             | WLR_XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN);
 
-    scene_node->data = this;
+    scene_tree->node.data = this;
     /* When rendering the scene tree, this `data` field
      * is expected to be pointing to a valid View in order
      * to draw window borders.
@@ -253,7 +252,7 @@ void XdgView::map()
         pending_map = false;
     }
 
-    wlr_scene_node_set_enabled(scene_node, true);
+    wlr_scene_node_set_enabled(&scene_tree->node, true);
     if (xdg_toplevel.current.fullscreen) {
         set_placement(VIEW_PLACEMENT_FULLSCREEN);
     } else if (xdg_toplevel.current.maximized) {
@@ -267,7 +266,7 @@ void XdgView::map()
 
 void XdgView::unmap()
 {
-    wlr_scene_node_set_enabled(scene_node, false);
+    wlr_scene_node_set_enabled(&scene_tree->node, false);
 
     /* Reset the cursor mode if the grabbed view was unmapped. */
     if (this == server.grabbed_view) {
