@@ -232,7 +232,23 @@ constexpr wlr_box XdgView::get_max_size() const
     return { 0, 0, max_width, max_height };
 }
 
-void XdgView::map()
+void XdgView::unmap()
+{
+    wlr_scene_node_set_enabled(&scene_tree->node, false);
+
+    /* Reset the cursor mode if the grabbed view was unmapped. */
+    if (this == server.grabbed_view) {
+        server.seat->cursor.reset_mode();
+    }
+
+    if (this == server.focused_view) {
+        server.focused_view = nullptr;
+    }
+}
+
+void XdgView::close() { wlr_xdg_toplevel_send_close(&xdg_toplevel); }
+
+void XdgView::impl_map()
 {
     if (pending_map) {
         wlr_xdg_surface_get_geometry(xdg_toplevel.base, &previous);
@@ -263,22 +279,6 @@ void XdgView::map()
 
     server.focus_view(this);
 }
-
-void XdgView::unmap()
-{
-    wlr_scene_node_set_enabled(&scene_tree->node, false);
-
-    /* Reset the cursor mode if the grabbed view was unmapped. */
-    if (this == server.grabbed_view) {
-        server.seat->cursor.reset_mode();
-    }
-
-    if (this == server.focused_view) {
-        server.focused_view = nullptr;
-    }
-}
-
-void XdgView::close() { wlr_xdg_toplevel_send_close(&xdg_toplevel); }
 
 void XdgView::impl_set_position(int32_t const x, int32_t const y)
 {

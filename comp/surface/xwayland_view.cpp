@@ -255,47 +255,6 @@ constexpr wlr_box XWaylandView::get_max_size() const
     return max;
 }
 
-void XWaylandView::map()
-{
-    xwayland_surface.data = this;
-    /* When rendering the scene tree, this `data` field
-     * is expected to be pointing to a valid View in order
-     * to draw window borders.
-     */
-    xwayland_surface.surface->data = this;
-
-    toplevel_handle.emplace(*this);
-    toplevel_handle->set_title(xwayland_surface.title);
-    toplevel_handle->set_app_id(xwayland_surface._class);
-
-    scene_tree = wlr_scene_subsurface_tree_create(
-        &server.scene->tree, xwayland_surface.surface);
-    scene_tree->node.data = this;
-
-    if (xwayland_surface.parent != nullptr) {
-        auto const* m_view = dynamic_cast<View*>(
-            static_cast<Surface*>(xwayland_surface.parent->data));
-        if (m_view != nullptr) {
-            wlr_scene_node_reparent(&scene_tree->node, m_view->scene_tree);
-            toplevel_handle->set_parent(m_view->toplevel_handle);
-        }
-    }
-
-    wlr_scene_node_set_enabled(&scene_tree->node, true);
-    wlr_scene_node_set_position(&scene_tree->node, current.x, current.y);
-
-    if (xwayland_surface.fullscreen) {
-        set_placement(VIEW_PLACEMENT_FULLSCREEN);
-    } else if (xwayland_surface.maximized_horz
-               && xwayland_surface.maximized_vert) {
-        set_placement(VIEW_PLACEMENT_MAXIMIZED);
-    }
-
-    server.views.insert(server.views.begin(), this);
-    update_outputs(true);
-    server.focus_view(this);
-}
-
 void XWaylandView::unmap()
 {
     wlr_scene_node_set_enabled(&scene_tree->node, false);
@@ -335,6 +294,47 @@ static constexpr int16_t trunc(int32_t const int32)
     }
 
     return static_cast<int16_t>(int32);
+}
+
+void XWaylandView::impl_map()
+{
+    xwayland_surface.data = this;
+    /* When rendering the scene tree, this `data` field
+     * is expected to be pointing to a valid View in order
+     * to draw window borders.
+     */
+    xwayland_surface.surface->data = this;
+
+    toplevel_handle.emplace(*this);
+    toplevel_handle->set_title(xwayland_surface.title);
+    toplevel_handle->set_app_id(xwayland_surface._class);
+
+    scene_tree = wlr_scene_subsurface_tree_create(
+        &server.scene->tree, xwayland_surface.surface);
+    scene_tree->node.data = this;
+
+    if (xwayland_surface.parent != nullptr) {
+        auto const* m_view = dynamic_cast<View*>(
+            static_cast<Surface*>(xwayland_surface.parent->data));
+        if (m_view != nullptr) {
+            wlr_scene_node_reparent(&scene_tree->node, m_view->scene_tree);
+            toplevel_handle->set_parent(m_view->toplevel_handle);
+        }
+    }
+
+    wlr_scene_node_set_enabled(&scene_tree->node, true);
+    wlr_scene_node_set_position(&scene_tree->node, current.x, current.y);
+
+    if (xwayland_surface.fullscreen) {
+        set_placement(VIEW_PLACEMENT_FULLSCREEN);
+    } else if (xwayland_surface.maximized_horz
+               && xwayland_surface.maximized_vert) {
+        set_placement(VIEW_PLACEMENT_MAXIMIZED);
+    }
+
+    server.views.insert(server.views.begin(), this);
+    update_outputs(true);
+    server.focus_view(this);
 }
 
 void XWaylandView::impl_set_position(int32_t const x, int32_t const y)

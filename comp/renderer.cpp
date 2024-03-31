@@ -2,11 +2,32 @@
 
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
+#include "util.hpp"
+
+#include <ctime>
 
 #include "wlr-wrap-start.hpp"
-#include "wlr/render/wlr_renderer.h"
-#include "wlr/util/log.h"
+#include <wlr/render/wlr_renderer.h>
+#include <wlr/util/log.h>
 #include "wlr-wrap-end.hpp"
+
+#define ANIMATION_DURATION 200
+
+static wlr_box scale_box(wlr_box box, double scale)
+{
+    int new_width = static_cast<int>(box.width * scale);
+    int new_height = static_cast<int>(box.height * scale);
+
+    int new_x = box.x + (box.width - new_width) / 2;
+    int new_y = box.y + (box.height - new_height) / 2;
+
+    return wlr_box {
+        .x = new_x ? new_x : 1,
+        .y = new_y ? new_y : 1,
+        .width = new_width ? new_width : 1,
+        .height = new_height ? new_height : 1,
+    };
+}
 
 static wlr_texture* scene_buffer_get_texture(wlr_scene_buffer* scene_buffer,
                                              wlr_renderer* renderer)
@@ -119,12 +140,14 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         }
     } break;
     case WLR_SCENE_NODE_BUFFER: {
+        // Get destination box (window region on screen)
         wlr_box dst_box = {};
         wlr_scene_node_coords(node, &dst_box.x, &dst_box.y);
         dst_box.x -= options->scene_output->x;
         dst_box.y -= options->scene_output->y;
         scene_node_get_size(node, &dst_box.width, &dst_box.height);
 
+        // Get some texture parameters
         wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
         wlr_texture* texture
             = scene_buffer_get_texture(scene_buffer, options->server.renderer);
@@ -132,27 +155,33 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         wl_output_transform transform = wlr_output_transform_invert(scene_buffer->transform);
         transform = wlr_output_transform_compose(transform, options->transform);
 
+        // Get view associated with node
+        View* view = nullptr;
+        {
+            wlr_surface* wlr_surface = wlr_scene_surface_try_from_buffer(scene_buffer)->surface;
+            if (wlr_surface)
+                view = dynamic_cast<View*>(static_cast<Surface*>(wlr_surface->data));
+        }
+
+        // Apply animation factor
+        bool animating = view ? view->animation_state.animating : false;
+        dst_box = animating
+            ? scale_box(dst_box, view->animation_state.animation_factor)
+            : dst_box;
+        float alpha = scene_buffer->opacity * (animating ? view->animation_state.animation_factor : 1);
+
+        // Render texture
         wlr_render_texture_options render_options = {
             .texture = texture,
             .src_box = scene_buffer->src_box,
             .dst_box = dst_box,
-            .alpha = &scene_buffer->opacity,
+            .alpha = &alpha,
             .transform = transform,
             .filter_mode = scene_buffer->filter_mode,
         };
         wlr_render_pass_add_texture(options->render_pass, &render_options);
 
-        View* view = nullptr;
-        {
-            wlr_surface* wlr_surface = wlr_scene_surface_try_from_buffer(scene_buffer)->surface;
-            Surface* surface = nullptr;
-            if (wlr_surface)
-                surface = static_cast<Surface*>(wlr_surface->data);
-            if (surface)
-                if (surface->is_view())
-                    view = dynamic_cast<View*>(surface);
-        }
-
+        // Render window borders
         if (view) {
             float color[4];
             int_to_float_array(view->is_active
@@ -160,6 +189,19 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
                                : options->server.config.border.color.unfocused, color);
             render_window_borders(options->render_pass, dst_box, color,
                                   options->server.config.border.width);
+        }
+
+        // Update animation factor
+        if (animating) {
+            auto now = get_time_milli();
+            auto duration = now - view->animation_state.start_time;
+
+            view->animation_state.animation_factor = static_cast<float>(duration) / ANIMATION_DURATION;
+
+            if (view->animation_state.animation_factor >= 1) {
+                view->animation_state.animating = false;
+                view->animation_state.animation_factor = 1.0f;
+            }
         }
     } break;
     }

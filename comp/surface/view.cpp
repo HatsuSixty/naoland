@@ -8,6 +8,7 @@
 #include "output.hpp"
 #include "server.hpp"
 #include "types.hpp"
+#include "util.hpp"
 
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_compositor.h>
@@ -80,6 +81,13 @@ View::find_output_for_maximize() const
     }
 
     return std::ref(*best_output);
+}
+
+void View::map()
+{
+    animation_state.start_time = get_time_milli();
+    animation_state.animating = true;
+    impl_map();
 }
 
 void View::begin_interactive(CursorMode const mode, uint32_t const edges)

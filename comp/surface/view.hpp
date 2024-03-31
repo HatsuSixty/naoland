@@ -41,6 +41,12 @@ struct View : Surface {
     std::optional<ForeignToplevelHandle> toplevel_handle = {};
     wlr_xdg_toplevel_decoration_v1* xdg_toplevel_decoration;
 
+    struct {
+        bool animating = false;
+        time_t start_time;
+        double animation_factor = 0;
+    } animation_state;
+
     View() noexcept;
     ~View() noexcept override = default;
 
@@ -48,10 +54,10 @@ struct View : Surface {
     [[nodiscard]] virtual wlr_box get_min_size() const = 0;
     [[nodiscard]] virtual wlr_box get_max_size() const = 0;
 
-    virtual void map() = 0;
     virtual void unmap() = 0;
     virtual void close() = 0;
 
+    void map();
     [[nodiscard]] constexpr bool is_view() const override { return true; }
     void begin_interactive(CursorMode mode, uint32_t edges);
     void set_position(int32_t x, int32_t y);
@@ -76,6 +82,8 @@ private:
     bool fullscreen();
 
 protected:
+    virtual void impl_map() = 0;
+
     virtual void impl_set_position(int32_t x, int32_t y) = 0;
     virtual void impl_set_size(int32_t width, int32_t height) = 0;
     virtual void impl_set_geometry(int x, int y, int width, int height) = 0;
@@ -128,11 +136,12 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
-    void map() override;
     void unmap() override;
     void close() override;
 
 protected:
+    void impl_map() override;
+
     void impl_set_position(int32_t x, int32_t y) override;
     void impl_set_size(int32_t width, int32_t height) override;
     void impl_set_geometry(int x, int y, int width, int height) override;
@@ -183,11 +192,12 @@ public:
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
 
-    void map() override;
     void unmap() override;
     void close() override;
 
 protected:
+    void impl_map() override;
+
     void impl_set_position(int32_t x, int32_t y) override;
     void impl_set_size(int32_t width, int32_t height) override;
     void impl_set_geometry(int32_t x, int32_t y, int width,
