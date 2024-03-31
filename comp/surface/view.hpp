@@ -53,6 +53,7 @@ struct View : Surface {
     virtual void unmap() = 0;
     virtual void close() = 0;
 
+    void close_animation();
     void map();
     [[nodiscard]] constexpr bool is_view() const override { return true; }
     void begin_interactive(CursorMode mode, uint32_t edges);

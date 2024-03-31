@@ -60,7 +60,7 @@ static void foreign_toplevel_handle_request_close_notify(wl_listener* listener,
     ForeignToplevelHandle const& handle
         = naoland_container_of(listener, handle, request_close);
 
-    handle.view.close();
+    handle.view.close_animation();
 }
 
 static void foreign_toplevel_handle_set_rectangle_notify(wl_listener* listener,

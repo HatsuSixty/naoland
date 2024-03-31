@@ -2,12 +2,11 @@
 
 #include "util.hpp"
 
-void Animation::start(AnimationKind kind, int duration)
+void Animation::start(AnimationOptions options)
 {
     start_time = get_time_milli();
     animating = true;
-    this->kind = kind;
-    this->duration = duration;
+    this->options = options;
 }
 
 double Animation::get_factor()
@@ -25,19 +24,34 @@ void Animation::update()
     if (!animating)
         return;
 
-    switch (kind) {
+    switch (options.kind) {
     case ANIMATION_FADE_IN: {
         auto now = get_time_milli();
         auto duration = now - start_time;
 
-        animation_factor = static_cast<float>(duration) / this->duration;
+        animation_factor = static_cast<float>(duration) / options.duration;
 
         if (animation_factor >= 1) {
-            animating = false;
+            if (options.callback)
+                options.callback(options.callback_data);
+
             animation_factor = 1.0f;
+            animating = false;
         }
     } break;
-    case ANIMATION_FADE_OUT:
-        break;
+    case ANIMATION_FADE_OUT: {
+        auto now = get_time_milli();
+        auto duration = now - start_time;
+
+        animation_factor = 1.0f - static_cast<float>(duration) / this->options.duration;
+
+        if (animation_factor <= 0) {
+            if (options.callback)
+                options.callback(options.callback_data);
+
+            animation_factor = 0;
+            animating = false;
+        }
+    } break;
     }
 }

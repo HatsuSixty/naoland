@@ -1,6 +1,8 @@
 #include "view.hpp"
 
 #include <algorithm>
+#include <chrono>
+#include <thread>
 #include <utility>
 
 #include "foreign_toplevel.hpp"
@@ -84,9 +86,29 @@ View::find_output_for_maximize() const
     return std::ref(*best_output);
 }
 
+static void close_on_animation_finish(void* data)
+{
+    View* view = static_cast<View*>(data);
+    wlr_scene_node_set_enabled(&view->scene_tree->node, false);
+    view->close();
+}
+
+void View::close_animation()
+{
+    animation.start(AnimationOptions {
+            .kind = ANIMATION_FADE_OUT,
+            .duration = 200,
+            .callback = close_on_animation_finish,
+            .callback_data = this,
+        });
+}
+
 void View::map()
 {
-    animation.start(ANIMATION_FADE_IN, 200);
+    animation.start(AnimationOptions {
+            .kind = ANIMATION_FADE_IN,
+            .duration = 200,
+        });
     impl_map();
 }
 

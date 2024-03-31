@@ -64,7 +64,7 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
                 break;
             case NAOLAND_COMMAND_CLOSE:
                 if (server.focused_view)
-                    server.focused_view->close();
+                    server.focused_view->close_animation();
                 break;
             }
 
