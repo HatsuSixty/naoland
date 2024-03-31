@@ -5,7 +5,7 @@
 #include "surface/layer.hpp"
 #include "surface/view.hpp"
 #include "types.hpp"
-#include "renderer.hpp"
+#include "rendering/renderer.hpp"
 
 #include <set>
 #include <utility>
