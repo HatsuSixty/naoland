@@ -11,6 +11,8 @@ class Keyboard;
 class Cursor;
 class PointerConstraint;
 
+class Animation;
+
 struct Surface;
 struct View;
 class XdgView;

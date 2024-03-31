@@ -7,6 +7,7 @@ naoland_comp_sources = [
   'config.cpp',
   'util.cpp',
   'rendering/renderer.cpp',
+  'rendering/animation.cpp',
   'input/constraint.cpp',
   'input/cursor.cpp',
   'input/keyboard.cpp',

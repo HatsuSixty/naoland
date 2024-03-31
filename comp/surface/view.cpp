@@ -6,6 +6,7 @@
 #include "foreign_toplevel.hpp"
 #include "input/seat.hpp"
 #include "output.hpp"
+#include "rendering/animation.hpp"
 #include "server.hpp"
 #include "types.hpp"
 #include "util.hpp"
@@ -85,8 +86,7 @@ View::find_output_for_maximize() const
 
 void View::map()
 {
-    animation_state.start_time = get_time_milli();
-    animation_state.animating = true;
+    animation.start(ANIMATION_FADE_IN, 200);
     impl_map();
 }
 

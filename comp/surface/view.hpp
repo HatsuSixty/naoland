@@ -5,6 +5,7 @@
 #include "input/cursor.hpp"
 #include "surface.hpp"
 #include "types.hpp"
+#include "rendering/animation.hpp"
 
 #include <optional>
 
@@ -40,12 +41,7 @@ struct View : Surface {
     wlr_box previous = {};
     std::optional<ForeignToplevelHandle> toplevel_handle = {};
     wlr_xdg_toplevel_decoration_v1* xdg_toplevel_decoration;
-
-    struct {
-        bool animating = false;
-        time_t start_time;
-        double animation_factor = 0;
-    } animation_state;
+    Animation animation;
 
     View() noexcept;
     ~View() noexcept override = default;

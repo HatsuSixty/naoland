@@ -164,11 +164,11 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         }
 
         // Apply animation factor
-        bool animating = view ? view->animation_state.animating : false;
+        bool animating = view ? view->animation.is_animating() : false;
         dst_box = animating
-            ? scale_box(dst_box, view->animation_state.animation_factor)
+            ? scale_box(dst_box, view->animation.get_factor())
             : dst_box;
-        float alpha = scene_buffer->opacity * (animating ? view->animation_state.animation_factor : 1);
+        float alpha = scene_buffer->opacity * (animating ? view->animation.get_factor() : 1);
 
         // Render texture
         wlr_render_texture_options render_options = {
@@ -181,27 +181,17 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         };
         wlr_render_pass_add_texture(options->render_pass, &render_options);
 
-        // Render window borders
         if (view) {
+            // Render window borders
             float color[4];
             int_to_float_array(view->is_active
                                ? options->server.config.border.color.focused
                                : options->server.config.border.color.unfocused, color);
             render_window_borders(options->render_pass, dst_box, color,
                                   options->server.config.border.width);
-        }
 
-        // Update animation factor
-        if (animating) {
-            auto now = get_time_milli();
-            auto duration = now - view->animation_state.start_time;
-
-            view->animation_state.animation_factor = static_cast<float>(duration) / ANIMATION_DURATION;
-
-            if (view->animation_state.animation_factor >= 1) {
-                view->animation_state.animating = false;
-                view->animation_state.animation_factor = 1.0f;
-            }
+            // Update animation
+            view->animation.update();
         }
     } break;
     }
