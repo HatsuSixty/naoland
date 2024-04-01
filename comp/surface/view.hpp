@@ -56,6 +56,7 @@ struct View : Surface {
     void close_animation();
     void map();
     [[nodiscard]] constexpr bool is_view() const override { return true; }
+    [[nodiscard]] constexpr bool is_popup() const override { return false; }
     void begin_interactive(CursorMode mode, uint32_t edges);
     void set_position(int32_t x, int32_t y);
     void set_size(int32_t width, int32_t height);

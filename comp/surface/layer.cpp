@@ -180,3 +180,4 @@ constexpr wlr_surface* Layer::get_wlr_surface() const
 constexpr Server& Layer::get_server() const { return server; }
 
 constexpr bool Layer::is_view() const { return false; }
+constexpr bool Layer::is_popup() const { return false; }

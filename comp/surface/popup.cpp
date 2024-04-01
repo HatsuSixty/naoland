@@ -10,6 +10,10 @@
 static void popup_map_notify(wl_listener* listener, void*)
 {
     Popup& popup = naoland_container_of(listener, popup, map);
+    popup.animation.start(AnimationOptions {
+            .kind = ANIMATION_FADE_IN,
+            .duration = 200,
+        });
 
     wlr_box current = {};
     wlr_xdg_surface_get_geometry(popup.wlr.base, &current);
@@ -75,3 +79,4 @@ constexpr wlr_surface* Popup::get_wlr_surface() const
 constexpr Server& Popup::get_server() const { return server; }
 
 constexpr bool Popup::is_view() const { return false; }
+constexpr bool Popup::is_popup() const { return true; }

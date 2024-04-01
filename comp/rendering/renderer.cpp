@@ -2,6 +2,7 @@
 
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
+#include "surface/popup.hpp"
 #include "util.hpp"
 
 #include <ctime>
@@ -140,14 +141,18 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         }
     } break;
     case WLR_SCENE_NODE_BUFFER: {
-        // Get destination box (window region on screen)
+        /*
+         * Get destination box (window region on screen)
+         */
         wlr_box dst_box = {};
         wlr_scene_node_coords(node, &dst_box.x, &dst_box.y);
         dst_box.x -= options->scene_output->x;
         dst_box.y -= options->scene_output->y;
         scene_node_get_size(node, &dst_box.width, &dst_box.height);
 
-        // Get some texture parameters
+        /*
+         * Get some texture parameters
+         */
         wlr_scene_buffer* scene_buffer = wlr_scene_buffer_from_node(node);
         wlr_texture* texture
             = scene_buffer_get_texture(scene_buffer, options->server.renderer);
@@ -155,22 +160,42 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         wl_output_transform transform = wlr_output_transform_invert(scene_buffer->transform);
         transform = wlr_output_transform_compose(transform, options->transform);
 
-        // Get view associated with node
-        View* view = nullptr;
+        /*
+         * Get associated surface
+         */
+        Surface* surface = nullptr;
+        bool is_view = false;
+        Animation* animation = nullptr;
         {
             wlr_surface* wlr_surface = wlr_scene_surface_try_from_buffer(scene_buffer)->surface;
             if (wlr_surface)
-                view = dynamic_cast<View*>(static_cast<Surface*>(wlr_surface->data));
+                surface = static_cast<Surface*>(wlr_surface->data);
+
+            if (surface) {
+                if (surface->is_popup()) {
+                    is_view = false;
+                    animation = &dynamic_cast<Popup*>(surface)->animation;
+                } else if (surface->is_view()) {
+                    is_view = true;
+                    animation = &dynamic_cast<View*>(surface)->animation;
+                }
+            }
         }
 
-        // Apply animation factor
-        bool animating = view ? view->animation.is_animating() : false;
-        dst_box = animating
-            ? scale_box(dst_box, view->animation.get_factor())
-            : dst_box;
-        float alpha = scene_buffer->opacity * (animating ? view->animation.get_factor() : 1);
+        /*
+         * Apply animation factor
+         */
+        bool animating = animation ? animation->is_animating() : false;
 
-        // Render texture
+        // Only scale views
+        if (animating && is_view)
+            dst_box = scale_box(dst_box, animation->get_factor());
+
+        float alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
+
+        /*
+         * Render texture
+         */
         wlr_render_texture_options render_options = {
             .texture = texture,
             .src_box = scene_buffer->src_box,
@@ -181,18 +206,25 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
         };
         wlr_render_pass_add_texture(options->render_pass, &render_options);
 
-        if (view) {
-            // Render window borders
+        /*
+         * Render window borders
+         */
+        if (is_view) {
+            View* view = dynamic_cast<View*>(surface);
+
             float color[4];
             int_to_float_array(view->is_active
                                ? options->server.config.border.color.focused
                                : options->server.config.border.color.unfocused, color);
             render_window_borders(options->render_pass, dst_box, color,
                                   options->server.config.border.width);
-
-            // Update animation
-            view->animation.update();
         }
+
+        /*
+         * Update animation
+         */
+        if (animation)
+            animation->update();
     } break;
     }
 }

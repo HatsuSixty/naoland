@@ -1,6 +1,7 @@
 #ifndef NAOLAND_POPUP_HPP
 #define NAOLAND_POPUP_HPP
 
+#include "rendering/animation.hpp"
 #include "surface.hpp"
 #include "types.hpp"
 
@@ -30,6 +31,7 @@ public:
     Server& server;
     Surface const& parent;
     wlr_xdg_popup& wlr;
+    Animation animation;
 
     Popup(Surface const& parent, wlr_xdg_popup& wlr) noexcept;
     ~Popup() noexcept override;
@@ -37,6 +39,7 @@ public:
     [[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
     [[nodiscard]] constexpr Server& get_server() const override;
     [[nodiscard]] constexpr bool is_view() const override;
+    [[nodiscard]] constexpr bool is_popup() const override;
 };
 
 #endif

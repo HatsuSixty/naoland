@@ -21,6 +21,7 @@ struct Surface {
     [[nodiscard]] virtual constexpr Server& get_server() const = 0;
     [[nodiscard]] virtual constexpr wlr_surface* get_wlr_surface() const = 0;
     [[nodiscard]] virtual constexpr bool is_view() const = 0;
+    [[nodiscard]] virtual constexpr bool is_popup() const = 0;
 };
 
 #endif

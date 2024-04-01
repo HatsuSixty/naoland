@@ -45,6 +45,7 @@ public:
     [[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
     [[nodiscard]] constexpr Server& get_server() const override;
     [[nodiscard]] constexpr bool is_view() const override;
+    [[nodiscard]] constexpr bool is_popup() const override;
 };
 
 class LayerSubsurface {
