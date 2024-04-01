@@ -42,6 +42,10 @@ Config::Config()
     border.width = 3;
     border.color.focused = 0xFFFF00FF;
     border.color.unfocused = 0xFFFFFFFF;
+
+    // Animations
+    animation.enabled = true;
+    animation.duration = 200;
 }
 
 void int_to_float_array(uint32_t color, float dst[4])

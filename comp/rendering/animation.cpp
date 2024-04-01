@@ -1,9 +1,17 @@
 #include "animation.hpp"
 
+#include "server.hpp"
 #include "util.hpp"
+
+Animation::Animation(Surface& surface)
+    : surface(surface)
+{
+}
 
 void Animation::start(AnimationOptions options)
 {
+    if (!surface.get_server().config.animation.enabled) return;
+
     start_time = get_time_milli();
     animating = true;
     this->options = options;
@@ -29,7 +37,7 @@ void Animation::update()
         auto now = get_time_milli();
         auto duration = now - start_time;
 
-        animation_factor = static_cast<float>(duration) / options.duration;
+        animation_factor = static_cast<float>(duration) / surface.get_server().config.animation.duration;
 
         if (animation_factor >= 1) {
             if (options.callback)
@@ -43,7 +51,7 @@ void Animation::update()
         auto now = get_time_milli();
         auto duration = now - start_time;
 
-        animation_factor = 1.0f - static_cast<float>(duration) / this->options.duration;
+        animation_factor = 1.0f - static_cast<float>(duration) / surface.get_server().config.animation.duration;
 
         if (animation_factor <= 0) {
             if (options.callback)

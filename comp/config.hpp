@@ -40,6 +40,11 @@ struct Config {
         int width;
     } border;
 
+    struct {
+        bool enabled;
+        int duration;
+    } animation;
+
     Config();
 };
 

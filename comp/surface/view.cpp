@@ -23,7 +23,8 @@
 #include "wlr-wrap-end.hpp"
 
 View::View() noexcept
-    : listeners(*this)
+    : animation(*this)
+    , listeners(*this)
 {
 }
 
@@ -97,7 +98,6 @@ void View::close_animation()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_OUT,
-            .duration = 200,
             .callback = close_on_animation_finish,
             .callback_data = this,
         });
@@ -107,7 +107,6 @@ void View::map()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_IN,
-            .duration = 200,
         });
     impl_map();
 }

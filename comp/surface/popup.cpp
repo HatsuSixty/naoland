@@ -12,7 +12,6 @@ static void popup_map_notify(wl_listener* listener, void*)
     Popup& popup = naoland_container_of(listener, popup, map);
     popup.animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_IN,
-            .duration = 200,
         });
 
     wlr_box current = {};
@@ -48,6 +47,7 @@ Popup::Popup(Surface const& parent, wlr_xdg_popup& wlr) noexcept
     , server(parent.get_server())
     , parent(parent)
     , wlr(wlr)
+    , animation(*this)
 {
     this->wlr = wlr;
     scene_tree
