@@ -12,6 +12,7 @@ static void popup_map_notify(wl_listener* listener, void*)
     Popup& popup = naoland_container_of(listener, popup, map);
     popup.animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_IN,
+            .ignore_play_percentage = true,
         });
 
     wlr_box current = {};

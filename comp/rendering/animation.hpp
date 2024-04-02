@@ -16,6 +16,7 @@ struct AnimationOptions {
     AnimationKind kind;
     AnimationFinishCallback callback;
     void* callback_data;
+    bool ignore_play_percentage;
 };
 
 class Animation {

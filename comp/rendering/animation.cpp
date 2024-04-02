@@ -33,7 +33,9 @@ void Animation::update()
         return;
 
     auto config = surface.get_server().config;
-    float play_percentage = 1.0f - config.animation.play_percentage;
+    float play_percentage = 1.0f
+        - (options.ignore_play_percentage ? 1.0f
+                                          : config.animation.play_percentage);
 
     switch (options.kind) {
     case ANIMATION_FADE_IN: {
