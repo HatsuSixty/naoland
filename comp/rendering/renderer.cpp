@@ -187,8 +187,8 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
          */
         bool animating = animation ? animation->is_animating() : false;
 
-        // Only scale views
-        if (animating && is_view)
+        wlr_box unscaled_box = dst_box;
+        if (animating && is_view) // Only scale views
             dst_box = scale_box(dst_box, animation->get_factor());
 
         float alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
@@ -211,12 +211,24 @@ void Renderer::render_scene_node(wlr_scene_node* node, NodeRenderOptions* option
          */
         if (is_view) {
             View* view = dynamic_cast<View*>(surface);
+            wlr_box geom = view->get_geometry();
+
+            wlr_box border_box = view->is_x11()
+                ? unscaled_box
+                : wlr_box {
+                      .x = unscaled_box.x + geom.x,
+                      .y = unscaled_box.y + geom.y,
+                      .width = geom.width,
+                      .height = geom.height,
+                  };
+            if (animating)
+                border_box = scale_box(border_box, animation->get_factor());
 
             float color[4];
             int_to_float_array(view->is_active
                                ? options->server.config.border.color.focused
                                : options->server.config.border.color.unfocused, color);
-            render_window_borders(options->render_pass, dst_box, color,
+            render_window_borders(options->render_pass, border_box, color,
                                   options->server.config.border.width);
         }
 

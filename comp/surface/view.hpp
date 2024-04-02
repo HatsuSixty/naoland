@@ -46,6 +46,7 @@ struct View : Surface {
     View() noexcept;
     ~View() noexcept override = default;
 
+    [[nodiscard]] virtual bool is_x11() const = 0;
     [[nodiscard]] virtual wlr_box get_geometry() const = 0;
     [[nodiscard]] virtual wlr_box get_min_size() const = 0;
     [[nodiscard]] virtual wlr_box get_max_size() const = 0;
@@ -130,6 +131,7 @@ public:
     [[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
     [[nodiscard]] constexpr Server& get_server() const override;
 
+    [[nodiscard]] bool is_x11() const override;
     [[nodiscard]] wlr_box get_geometry() const override;
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;
@@ -186,6 +188,7 @@ public:
     [[nodiscard]] constexpr wlr_surface* get_wlr_surface() const override;
     [[nodiscard]] constexpr Server& get_server() const override;
 
+    [[nodiscard]] bool is_x11() const override;
     [[nodiscard]] constexpr wlr_box get_geometry() const override;
     [[nodiscard]] constexpr wlr_box get_min_size() const override;
     [[nodiscard]] constexpr wlr_box get_max_size() const override;

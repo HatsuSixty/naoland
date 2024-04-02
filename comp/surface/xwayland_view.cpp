@@ -227,6 +227,11 @@ constexpr wlr_surface* XWaylandView::get_wlr_surface() const
 
 constexpr Server& XWaylandView::get_server() const { return server; }
 
+bool XWaylandView::is_x11() const
+{
+    return true;
+}
+
 constexpr wlr_box XWaylandView::get_geometry() const
 {
     return { xwayland_surface.x, xwayland_surface.y, xwayland_surface.width,

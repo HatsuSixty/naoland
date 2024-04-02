@@ -208,6 +208,11 @@ constexpr wlr_surface* XdgView::get_wlr_surface() const
 
 constexpr Server& XdgView::get_server() const { return server; }
 
+bool XdgView::is_x11() const
+{
+    return false;
+}
+
 wlr_box XdgView::get_geometry() const
 {
     wlr_box box = {};
