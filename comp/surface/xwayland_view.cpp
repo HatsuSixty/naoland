@@ -310,7 +310,7 @@ void XWaylandView::impl_map()
     toplevel_handle->set_app_id(xwayland_surface._class);
 
     scene_tree = wlr_scene_subsurface_tree_create(
-        &server.scene->tree, xwayland_surface.surface);
+        server.scene_layers[NAOLAND_SCENE_LAYER_NORMAL], xwayland_surface.surface);
     scene_tree->node.data = this;
 
     if (xwayland_surface.parent != nullptr) {

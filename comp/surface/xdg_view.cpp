@@ -129,7 +129,7 @@ XdgView::XdgView(Server& server, wlr_xdg_toplevel& wlr) noexcept
     , xdg_toplevel(wlr)
 {
     scene_tree
-        = wlr_scene_xdg_surface_create(&server.scene->tree, wlr.base);
+        = wlr_scene_xdg_surface_create(server.scene_layers[NAOLAND_SCENE_LAYER_NORMAL], wlr.base);
 
     wlr_xdg_toplevel_set_wm_capabilities(
         &wlr,
