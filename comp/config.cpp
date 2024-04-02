@@ -46,7 +46,7 @@ Config::Config()
     // Animations
     animation.enabled = true;
     animation.duration = 200;
-    animation.play_percentage = 0.5;
+    animation.play_percentage = 0.25;
 }
 
 void int_to_float_array(uint32_t color, float dst[4])
