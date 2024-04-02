@@ -33,12 +33,13 @@ void Animation::update()
         return;
 
     auto config = surface.get_server().config;
+    float play_percentage = 1.0f - config.animation.play_percentage;
 
     switch (options.kind) {
     case ANIMATION_FADE_IN: {
         auto now = get_time_milli();
         auto duration = now - start_time
-            + config.animation.duration * config.animation.play_percentage;
+            + config.animation.duration * play_percentage;
 
         animation_factor = static_cast<float>(duration) / config.animation.duration;
 
@@ -56,7 +57,7 @@ void Animation::update()
 
         animation_factor = 1.0f - static_cast<float>(duration) / config.animation.duration;
 
-        if (animation_factor <= config.animation.play_percentage) {
+        if (animation_factor <= play_percentage) {
             if (options.callback)
                 options.callback(options.callback_data);
 
