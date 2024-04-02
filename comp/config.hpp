@@ -43,6 +43,7 @@ struct Config {
     struct {
         bool enabled;
         int duration;
+        float play_percentage;
     } animation;
 
     Config();
