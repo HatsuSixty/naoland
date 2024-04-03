@@ -65,6 +65,28 @@ Config::Config()
                 },
             },
         });
+    keybindings.push_back(Keybinding {
+            .modifiers = WLR_MODIFIER_ALT | WLR_MODIFIER_SHIFT,
+            .keysym = XKB_KEY_exclam,
+            .action = KeyAction {
+                .kind = NAOLAND_ACTION_COMMAND,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_MOVE_TO_WORKSPACE,
+                    .param = 1,
+                },
+            },
+        });
+    keybindings.push_back(Keybinding {
+            .modifiers = WLR_MODIFIER_ALT | WLR_MODIFIER_SHIFT,
+            .keysym = XKB_KEY_at,
+            .action = KeyAction {
+                .kind = NAOLAND_ACTION_COMMAND,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_MOVE_TO_WORKSPACE,
+                    .param = 2,
+                },
+            },
+        });
 
     // Border
     border.width = 3;

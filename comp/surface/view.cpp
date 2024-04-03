@@ -414,3 +414,13 @@ void View::destroy_decorations()
     wl_list_remove(&listeners.destroy_decoration.link);
     wl_list_remove(&listeners.request_decoration_mode.link);
 }
+
+void View::move_to_workspace(int number)
+{
+    if (number > WORKSPACE_COUNT) return;
+    if (number < 1) return;
+    number -= 1;
+
+    Workspace workspace = get_server().workspaces[number];
+    wlr_scene_node_reparent(&scene_tree->node, workspace.scene_tree);
+}

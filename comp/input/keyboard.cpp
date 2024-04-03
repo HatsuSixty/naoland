@@ -69,6 +69,10 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
             case NAOLAND_COMMAND_SWITCH_WORKSPACE:
                 server.switch_workspace(keybinding.action.compositor_command.param);
                 break;
+            case NAOLAND_COMMAND_MOVE_TO_WORKSPACE:
+                if (server.focused_view)
+                    server.focused_view->move_to_workspace(keybinding.action.compositor_command.param);
+                break;
             }
 
         } return true;

@@ -70,6 +70,7 @@ struct View : Surface {
     void toggle_fullscreen();
     void setup_decorations(wlr_xdg_toplevel_decoration_v1* decoration);
     void destroy_decorations();
+    void move_to_workspace(int number);
 
 private:
     Listeners listeners = Listeners(*this);
