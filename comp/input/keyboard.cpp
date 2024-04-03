@@ -50,7 +50,7 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
         case NAOLAND_ACTION_COMMAND: {
             Server& server = keyboard.seat.server;
 
-            switch (keybinding.action.compositor_command) {
+            switch (keybinding.action.compositor_command.kind) {
             case NAOLAND_COMMAND_SWITCH_TASK: {
                 /* Cycle to the next view */
                 if (server.views.size() < 2) {
@@ -65,6 +65,9 @@ static bool handle_keybinding_for_symbol(Keybinding& keybinding,
             case NAOLAND_COMMAND_CLOSE:
                 if (server.focused_view)
                     server.focused_view->close_animation();
+                break;
+            case NAOLAND_COMMAND_SWITCH_WORKSPACE:
+                server.switch_workspace(keybinding.action.compositor_command.param);
                 break;
             }
 

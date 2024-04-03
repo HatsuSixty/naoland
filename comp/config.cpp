@@ -18,7 +18,9 @@ Config::Config()
             .keysym = XKB_KEY_Tab,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
-                .compositor_command = NAOLAND_COMMAND_SWITCH_TASK,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_SWITCH_TASK,
+                },
             },
         });
     keybindings.push_back(Keybinding {
@@ -26,7 +28,9 @@ Config::Config()
             .keysym = XKB_KEY_Escape,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
-                .compositor_command = NAOLAND_COMMAND_QUIT_SERVER,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_QUIT_SERVER,
+                },
             },
         });
     keybindings.push_back(Keybinding {
@@ -34,7 +38,31 @@ Config::Config()
             .keysym = XKB_KEY_Q,
             .action = KeyAction {
                 .kind = NAOLAND_ACTION_COMMAND,
-                .compositor_command = NAOLAND_COMMAND_CLOSE,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_CLOSE,
+                },
+            },
+        });
+    keybindings.push_back(Keybinding {
+            .modifiers = WLR_MODIFIER_ALT,
+            .keysym = XKB_KEY_1,
+            .action = KeyAction {
+                .kind = NAOLAND_ACTION_COMMAND,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_SWITCH_WORKSPACE,
+                    .param = 1,
+                },
+            },
+        });
+    keybindings.push_back(Keybinding {
+            .modifiers = WLR_MODIFIER_ALT,
+            .keysym = XKB_KEY_2,
+            .action = KeyAction {
+                .kind = NAOLAND_ACTION_COMMAND,
+                .compositor_command = {
+                    .kind = NAOLAND_COMMAND_SWITCH_WORKSPACE,
+                    .param = 2,
+                },
             },
         });
 

@@ -10,6 +10,7 @@ enum CompositorCommand {
     NAOLAND_COMMAND_QUIT_SERVER,
     NAOLAND_COMMAND_SWITCH_TASK,
     NAOLAND_COMMAND_CLOSE,
+    NAOLAND_COMMAND_SWITCH_WORKSPACE,
 };
 
 enum KeyActionKind {
@@ -20,7 +21,10 @@ enum KeyActionKind {
 struct KeyAction {
     KeyActionKind kind;
     std::string spawn_command;
-    CompositorCommand compositor_command;
+    struct {
+        CompositorCommand kind;
+        int param;
+    } compositor_command;
 };
 
 struct Keybinding {

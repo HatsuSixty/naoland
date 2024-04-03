@@ -375,6 +375,17 @@ static void new_toplevel_decoration_notify(wl_listener*, void* data)
     view->setup_decorations(decoration);
 }
 
+void Server::switch_workspace(int number)
+{
+    if (number > WORKSPACE_COUNT) return;
+    if (number < 1) return;
+    number -= 1;
+
+    for (int j = 0; j < WORKSPACE_COUNT; ++j) {
+        wlr_scene_node_set_enabled(&workspaces[j].scene_tree->node, j == number);
+    }
+}
+
 Server::Server()
     : listeners(*this)
 {
@@ -456,6 +467,23 @@ Server::Server()
     scene = wlr_scene_create();
     assert(scene);
     for (int32_t idx = 0; idx <= NAOLAND_SCENE_LAYER_LOCK; idx++) {
+        if (idx == NAOLAND_SCENE_LAYER_NORMAL) {
+            for (int j = 0; j < WORKSPACE_COUNT; ++j) {
+                workspaces[j] = Workspace {
+                    .number = j,
+                    .scene_tree = wlr_scene_tree_create(&scene->tree),
+                };
+                wlr_scene_node_raise_to_top(&workspaces[j].scene_tree->node);
+
+                if (j != 0) {
+                    wlr_scene_node_set_enabled(&workspaces[j].scene_tree->node, false);
+                }
+            }
+
+            scene_layers[idx] = workspaces[0].scene_tree;
+            continue;
+        }
+
         scene_layers[idx] = wlr_scene_tree_create(&scene->tree);
         wlr_scene_node_raise_to_top(&scene_layers[idx]->node);
     }

@@ -34,6 +34,13 @@ enum NaolandSceneLayer {
     NAOLAND_SCENE_LAYER_LOCK
 };
 
+#define WORKSPACE_COUNT 10
+
+struct Workspace {
+    int number;
+    wlr_scene_tree* scene_tree;
+};
+
 class Server {
 public:
     struct Listeners {
@@ -66,6 +73,7 @@ public:
 
     XWayland* xwayland;
 
+    Workspace workspaces[WORKSPACE_COUNT];
     wlr_scene* scene;
     wlr_scene_output_layout* scene_layout;
     wlr_scene_tree* scene_layers[NAOLAND_SCENE_LAYER_LOCK + 1] = {};
@@ -107,6 +115,7 @@ public:
     Surface* surface_at(double lx, double ly, wlr_surface** wlr, double* sx,
                         double* sy) const;
     void focus_view(View* view, wlr_surface* surface = nullptr);
+    void switch_workspace(int number);
 };
 
 #endif
