@@ -20,5 +20,4 @@ foreach feature : ['drm_backend', 'libinput_backend', 'session', 'xwayland']
     endif
 endforeach
 
-subdir('protocols')
 subdir('comp')

@@ -383,6 +383,9 @@ void Server::switch_workspace(int number)
 
     for (int j = 0; j < WORKSPACE_COUNT; ++j) {
         wlr_scene_node_set_enabled(&workspaces[j].scene_tree->node, j == number);
+        if (j == number) {
+            scene_layers[NAOLAND_SCENE_LAYER_NORMAL] = workspaces[j].scene_tree;
+        }
     }
 }
 

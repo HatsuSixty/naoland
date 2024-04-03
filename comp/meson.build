@@ -1,3 +1,5 @@
+subdir('protocols')
+
 naoland_comp_sources = [
   'main.cpp',
   'foreign_toplevel.cpp',
