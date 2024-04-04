@@ -51,6 +51,10 @@ struct Config {
         float play_percentage;
     } animation;
 
+    struct {
+        int press_action;
+    } tablet;
+
     Config();
 };
 

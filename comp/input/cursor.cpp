@@ -167,76 +167,16 @@ static void cursor_button_notify(wl_listener* listener, void* data)
     Cursor& cursor = naoland_container_of(listener, cursor, button);
     auto const* event = static_cast<wlr_pointer_button_event*>(data);
 
-    Server& server = cursor.seat.server;
+    wlr_idle_notifier_v1_notify_activity(cursor.seat.server.idle_notifier, cursor.seat.wlr);
 
-    double sx, sy;
-
-    wlr_surface* surface = nullptr;
-    Surface* naoland_surface
-        = server.surface_at(cursor.wlr.x, cursor.wlr.y, &surface, &sx, &sy);
-
-    if (event->state == WLR_BUTTON_RELEASED) {
-        /* If you released any buttons, we exit interactive move/resize mode. */
-        if (cursor.mode != NAOLAND_CURSOR_PASSTHROUGH) {
-            cursor.reset_mode();
-        }
-    } else if (naoland_surface != nullptr && naoland_surface->is_view()) {
-        /* Handle window move/resize */
-        wlr_keyboard* keyboard = wlr_seat_get_keyboard(server.seat->wlr);
-        uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard);
-        if (modifiers == WLR_MODIFIER_ALT) {
-            View* view = dynamic_cast<View*>(naoland_surface);
-
-            /* Calculate which edge of the view is
-             * the closest to the cursor
-             */
-            wlr_box geometry = view->get_geometry();
-            double cursor_x = cursor.wlr.x;
-            double cursor_y = cursor.wlr.y;
-
-            int dist_left = cursor_x - geometry.x;
-            int dist_right = geometry.x + geometry.width - cursor_x;
-            int dist_top = cursor_y - geometry.y;
-            int dist_bottom = geometry.y + geometry.height - cursor_y;
-
-            int closest_horz = std::min({dist_left, dist_right});
-            int closest_vert = std::min({dist_top, dist_bottom});
-
-            int edges = 0;
-            {
-                if (closest_horz == dist_left)
-                    edges |= WLR_EDGE_LEFT;
-                else if (closest_horz == dist_right)
-                    edges |= WLR_EDGE_RIGHT;
-
-                if (closest_vert == dist_top)
-                    edges |= WLR_EDGE_TOP;
-                else if (closest_vert == dist_bottom)
-                    edges |= WLR_EDGE_BOTTOM;
-            }
-
-            switch (event->button) {
-            case BTN_LEFT: {
-                // Window move
-                view->begin_interactive(NAOLAND_CURSOR_MOVE, edges);
-            } break;
-            case BTN_RIGHT: {
-                // Window resize
-                view->begin_interactive(NAOLAND_CURSOR_RESIZE, edges);
-            } break;
-            }
-
-            return;
-        }
-        /* If no modifiers were pressed, focus that client */
-        server.focus_view(dynamic_cast<View*>(naoland_surface), surface);
-    } else {
-        server.focus_view(nullptr);
+    switch (event->state) {
+    case WLR_BUTTON_RELEASED:
+        cursor.button_release(event->button, event->state, event->time_msec);
+        break;
+    case WLR_BUTTON_PRESSED:
+        cursor.button_press(event->button, event->state, event->time_msec);
+        break;
     }
-
-    /* Notify the client with pointer focus that a button press has occurred */
-    wlr_seat_pointer_notify_button(server.seat->wlr, event->time_msec,
-                                   event->button, event->state);
 }
 
 /* This event is forwarded by the cursor when a pointer emits a _relative_
@@ -520,4 +460,118 @@ void Cursor::set_image(std::string const& name)
 void Cursor::reload_image() const
 {
     wlr_cursor_set_xcursor(&wlr, cursor_mgr, current_image.c_str());
+}
+
+void Cursor::emulate_button(uint32_t button, wlr_button_state state, uint32_t time_msec)
+{
+    wlr_idle_notifier_v1_notify_activity(seat.server.idle_notifier, seat.wlr);
+
+    switch (state) {
+    case WLR_BUTTON_PRESSED:
+        button_press(button, state, time_msec);
+        break;
+    case WLR_BUTTON_RELEASED:
+        button_release(button, state, time_msec);
+        break;
+    }
+}
+
+void Cursor::button_press(uint32_t button, wlr_button_state state, uint32_t time_msec)
+{
+    Server& server = seat.server;
+
+    double sx, sy;
+
+    wlr_surface* surface = nullptr;
+    Surface* naoland_surface
+        = server.surface_at(wlr.x, wlr.y, &surface, &sx, &sy);
+
+    if (naoland_surface != nullptr && naoland_surface->is_view()) {
+        /* Handle window move/resize */
+        wlr_keyboard* keyboard = wlr_seat_get_keyboard(server.seat->wlr);
+        uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard);
+        if (modifiers == WLR_MODIFIER_ALT) {
+            View* view = dynamic_cast<View*>(naoland_surface);
+
+            /* Calculate which edge of the view is
+             * the closest to the cursor
+             */
+            wlr_box geometry = view->get_geometry();
+            double cursor_x = wlr.x;
+            double cursor_y = wlr.y;
+
+            int dist_left = cursor_x - geometry.x;
+            int dist_right = geometry.x + geometry.width - cursor_x;
+            int dist_top = cursor_y - geometry.y;
+            int dist_bottom = geometry.y + geometry.height - cursor_y;
+
+            int closest_horz = std::min({dist_left, dist_right});
+            int closest_vert = std::min({dist_top, dist_bottom});
+
+            int edges = 0;
+            {
+                if (closest_horz == dist_left)
+                    edges |= WLR_EDGE_LEFT;
+                else if (closest_horz == dist_right)
+                    edges |= WLR_EDGE_RIGHT;
+
+                if (closest_vert == dist_top)
+                    edges |= WLR_EDGE_TOP;
+                else if (closest_vert == dist_bottom)
+                    edges |= WLR_EDGE_BOTTOM;
+            }
+
+            switch (button) {
+            case BTN_LEFT: {
+                // Window move
+                view->begin_interactive(NAOLAND_CURSOR_MOVE, edges);
+            } break;
+            case BTN_RIGHT: {
+                // Window resize
+                view->begin_interactive(NAOLAND_CURSOR_RESIZE, edges);
+            } break;
+            }
+
+            return;
+        }
+        /* If no modifiers were pressed, focus that client */
+        server.focus_view(dynamic_cast<View*>(naoland_surface), surface);
+    } else {
+        server.focus_view(nullptr);
+    }
+
+    /* Notify the client with pointer focus that a button press has occurred */
+    wlr_seat_pointer_notify_button(server.seat->wlr, time_msec,
+                                   button, state);
+}
+
+void Cursor::button_release(uint32_t button, wlr_button_state state, uint32_t time_msec)
+{
+    Server& server = seat.server;
+
+    if (mode != NAOLAND_CURSOR_PASSTHROUGH) {
+        reset_mode();
+    }
+
+    wlr_seat_pointer_notify_button(server.seat->wlr, time_msec,
+                                   button, state);
+}
+
+void Cursor::emulate_move_absolute(struct wlr_input_device *device, double x, double y, uint32_t time_msec)
+{
+    double lx, ly;
+    wlr_cursor_absolute_to_layout_coords(&seat.cursor.wlr,
+                                         device, x, y, &lx, &ly);
+
+    double dx = lx - seat.cursor.wlr.x;
+    double dy = ly - seat.cursor.wlr.y;
+
+    wlr_relative_pointer_manager_v1_send_relative_motion(
+        seat.cursor.relative_pointer_mgr,
+        seat.wlr, (uint64_t)time_msec * 1000,
+        dx, dy, dx, dy);
+
+    wlr_cursor_move(&seat.cursor.wlr, device, dx, dy);
+    process_motion(time_msec);
+    wlr_seat_pointer_notify_frame(seat.wlr);
 }

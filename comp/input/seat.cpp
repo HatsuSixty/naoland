@@ -1,6 +1,7 @@
 #include "seat.hpp"
 
 #include "cursor.hpp"
+#include "input/tablet.hpp"
 #include "keyboard.hpp"
 #include "server.hpp"
 #include "surface/view.hpp"
@@ -133,8 +134,10 @@ void Seat::new_input_device(wlr_input_device* device)
         keyboards.push_back(
             new Keyboard(*this, *wlr_keyboard_from_input_device(device)));
         break;
-    case WLR_INPUT_DEVICE_POINTER:
     case WLR_INPUT_DEVICE_TABLET_TOOL:
+        new DrawingTablet(*this, device);
+        break;
+    case WLR_INPUT_DEVICE_POINTER:
     case WLR_INPUT_DEVICE_TOUCH:
         cursor.attach_input_device(device);
         break;

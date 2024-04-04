@@ -4,6 +4,7 @@
 #include <wlr/types/wlr_keyboard.h>
 #include "wlr-wrap-end.hpp"
 
+#include <linux/input-event-codes.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 Config::Config()
@@ -97,6 +98,9 @@ Config::Config()
     animation.enabled = true;
     animation.duration = 200;
     animation.play_percentage = 0.25;
+
+    // Tablet
+    tablet.press_action = BTN_LEFT;
 }
 
 void int_to_float_array(uint32_t color, float dst[4])

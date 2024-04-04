@@ -70,6 +70,10 @@ public:
     void warp_to_constraint(PointerConstraint const& constraint) const;
     void set_image(std::string const& name);
     void reload_image() const;
+    void emulate_button(uint32_t button, wlr_button_state state, uint32_t time_msec);
+    void button_press(uint32_t button, wlr_button_state state, uint32_t time_msec);
+    void button_release(uint32_t button, wlr_button_state state, uint32_t time_msec);
+    void emulate_move_absolute(struct wlr_input_device *device, double x, double y, uint32_t time_msec);
 };
 
 #endif

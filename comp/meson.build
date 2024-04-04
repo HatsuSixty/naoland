@@ -14,6 +14,7 @@ naoland_comp_sources = [
   'input/cursor.cpp',
   'input/keyboard.cpp',
   'input/seat.cpp',
+  'input/tablet.cpp',
   'surface/layer.cpp',
   'surface/popup.cpp',
   'surface/view.cpp',
