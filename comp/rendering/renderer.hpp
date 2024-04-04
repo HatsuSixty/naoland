@@ -18,6 +18,7 @@ struct NodeRenderOptions {
 };
 
 void render_scene_node(wlr_scene_node* node, NodeRenderOptions* options);
+void render_buffer_node(wlr_scene_node* node, NodeRenderOptions* options);
 
 }
 
