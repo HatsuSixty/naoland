@@ -135,7 +135,7 @@ void ForeignToplevelHandle::set_parent(
         parent) const
 {
     wlr_foreign_toplevel_handle_v1_set_parent(
-        &handle, parent.has_value() ? nullptr : &parent->get().handle);
+        &handle, parent.has_value() ? &parent->get().handle : nullptr);
 }
 
 void ForeignToplevelHandle::set_placement(ViewPlacement const placement) const
