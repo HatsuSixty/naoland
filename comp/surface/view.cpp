@@ -98,6 +98,7 @@ void View::close_animation()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_OUT,
+            .role = ANIMATION_ZOOM,
             .callback = close_on_animation_finish,
             .callback_data = this,
         });
@@ -107,6 +108,7 @@ void View::map()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_IN,
+            .role = ANIMATION_ZOOM,
         });
     impl_map();
 }

@@ -12,8 +12,15 @@ enum AnimationKind {
     ANIMATION_FADE_OUT,
 };
 
+enum AnimationRole {
+    ANIMATION_ZOOM = 1,
+    ANIMATION_ZOOM_FROM_BOTTOM,
+    ANIMATION_FADE,
+};
+
 struct AnimationOptions {
     AnimationKind kind;
+    AnimationRole role;
     AnimationFinishCallback callback;
     void* callback_data;
     bool ignore_play_percentage;
@@ -33,6 +40,7 @@ public:
     void start(AnimationOptions options);
     double get_factor();
     bool is_animating();
+    AnimationRole get_role();
     void update();
 };
 

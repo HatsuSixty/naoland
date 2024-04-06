@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 
+#include "rendering/animation.hpp"
 #include "surface/surface.hpp"
 #include "surface/view.hpp"
 #include "surface/popup.hpp"
@@ -15,13 +16,14 @@
 
 #define ANIMATION_DURATION 200
 
-static wlr_box scale_box(wlr_box box, double scale)
+static wlr_box scale_box(wlr_box box, double scale, bool from_bottom = false)
 {
     int new_width = static_cast<int>(box.width * scale);
     int new_height = static_cast<int>(box.height * scale);
 
     int new_x = box.x + (box.width - new_width) / 2;
-    int new_y = box.y + (box.height - new_height) / 2;
+    int new_y = from_bottom ? box.y + box.height - new_height
+                            : box.y + (box.height - new_height) / 2;
 
     return wlr_box {
         .x = new_x ? new_x : 1,
@@ -160,7 +162,6 @@ void Renderer::render_buffer_node(wlr_scene_node* node, NodeRenderOptions* optio
 
         if (surface) {
             if (surface->is_popup()) {
-                is_view = false;
                 animation = &dynamic_cast<Popup*>(surface)->animation;
             } else if (surface->is_view()) {
                 is_view = true;
@@ -174,11 +175,37 @@ void Renderer::render_buffer_node(wlr_scene_node* node, NodeRenderOptions* optio
      */
     bool animating = animation ? animation->is_animating() : false;
 
-    wlr_box unscaled_box = dst_box;
-    if (animating && is_view) // Only scale views
-        dst_box = scale_box(dst_box, animation->get_factor());
+    wlr_box border_box = dst_box;
+    if (is_view) {
+        View* view = dynamic_cast<View*>(surface);
+        wlr_box geom = view->get_geometry();
+        border_box = view->is_x11() ? dst_box
+                                    : wlr_box {
+                                          .x = dst_box.x + geom.x,
+                                          .y = dst_box.y + geom.y,
+                                          .width = geom.width,
+                                          .height = geom.height,
+                                      };
+    }
 
-    float alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
+    float alpha = 1.0f;
+
+    if (animating)
+        switch (animation->get_role()) {
+        case ANIMATION_ZOOM:
+            dst_box = scale_box(dst_box, animation->get_factor());
+            border_box = scale_box(border_box, animation->get_factor());
+            alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
+            break;
+        case ANIMATION_ZOOM_FROM_BOTTOM:
+            dst_box = scale_box(dst_box, animation->get_factor(), true);
+            border_box = scale_box(border_box, animation->get_factor(), true);
+            alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
+            break;
+        case ANIMATION_FADE:
+            alpha = scene_buffer->opacity * (animating ? animation->get_factor() : 1);
+            break;
+        }
 
     /*
      * Render texture
@@ -198,18 +225,6 @@ void Renderer::render_buffer_node(wlr_scene_node* node, NodeRenderOptions* optio
      */
     if (is_view) {
         View* view = dynamic_cast<View*>(surface);
-        wlr_box geom = view->get_geometry();
-
-        wlr_box border_box = view->is_x11()
-            ? unscaled_box
-            : wlr_box {
-            .x = unscaled_box.x + geom.x,
-            .y = unscaled_box.y + geom.y,
-            .width = geom.width,
-            .height = geom.height,
-        };
-        if (animating)
-            border_box = scale_box(border_box, animation->get_factor());
 
         float color[4];
         int_to_float_array(view->is_active

@@ -3,6 +3,8 @@
 #include "server.hpp"
 #include "util.hpp"
 
+#include <cassert>
+
 Animation::Animation(Surface& surface)
     : surface(surface)
 {
@@ -10,6 +12,8 @@ Animation::Animation(Surface& surface)
 
 void Animation::start(AnimationOptions options)
 {
+    assert(options.role != 0 && "Animation role cannot be 0");
+
     if (!surface.get_server().config.animation.enabled) return;
 
     start_time = get_time_milli();
@@ -25,6 +29,11 @@ double Animation::get_factor()
 bool Animation::is_animating()
 {
     return animating;
+}
+
+AnimationRole Animation::get_role()
+{
+    return options.role;
 }
 
 void Animation::update()
