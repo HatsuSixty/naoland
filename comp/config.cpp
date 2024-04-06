@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+#include "rendering/animation.hpp"
+
 #include "wlr-wrap-start.hpp"
 #include <wlr/types/wlr_keyboard.h>
 #include "wlr-wrap-end.hpp"
@@ -98,6 +100,7 @@ Config::Config()
     animation.enabled = true;
     animation.duration = 200;
     animation.play_percentage = 0.25;
+    animation.window_animation_kind = ANIMATION_ZOOM;
 
     // Tablet
     tablet.press_action = BTN_LEFT;

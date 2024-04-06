@@ -6,6 +6,8 @@
 #include <string>
 #include <xkbcommon/xkbcommon.h>
 
+#include "rendering/animation.hpp"
+
 enum CompositorCommand {
     NAOLAND_COMMAND_QUIT_SERVER,
     NAOLAND_COMMAND_SWITCH_TASK,
@@ -49,6 +51,7 @@ struct Config {
         bool enabled;
         int duration;
         float play_percentage;
+        AnimationRole window_animation_kind;
     } animation;
 
     struct {
