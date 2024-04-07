@@ -100,7 +100,8 @@ Config::Config()
     animation.enabled = true;
     animation.duration = 200;
     animation.play_percentage = 0.25;
-    animation.window_animation_kind = ANIMATION_ZOOM;
+    animation.window_animation.open = ANIMATION_ZOOM_FROM_BOTTOM;
+    animation.window_animation.close = ANIMATION_ZOOM;
 
     // Tablet
     tablet.press_action = BTN_LEFT;

@@ -51,7 +51,10 @@ struct Config {
         bool enabled;
         int duration;
         float play_percentage;
-        AnimationRole window_animation_kind;
+        struct {
+            AnimationRole open;
+            AnimationRole close;
+        } window_animation;
     } animation;
 
     struct {

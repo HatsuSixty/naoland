@@ -98,7 +98,7 @@ void View::close_animation()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_OUT,
-            .role = get_server().config.animation.window_animation_kind,
+            .role = get_server().config.animation.window_animation.close,
             .callback = close_on_animation_finish,
             .callback_data = this,
         });
@@ -108,7 +108,7 @@ void View::map()
 {
     animation.start(AnimationOptions {
             .kind = ANIMATION_FADE_IN,
-            .role = get_server().config.animation.window_animation_kind,
+            .role = get_server().config.animation.window_animation.open,
         });
     impl_map();
 }
